@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { parse } from "csv-parse/sync";
 
+type CsvRow = {
+    session_id: string;
+    state: string;
+    timestamp: string;
+}
+
 export async function POST(req: Request) {
     try {
         const formData = await req.formData();
@@ -24,10 +30,30 @@ export async function POST(req: Request) {
         const records = parse(text, {
             columns: true,
             skip_empty_lines: true, 
-        })
+            trim: true,
+        }) as CsvRow[];
+
+        if (records.length === 0) {
+            return NextResponse.json(
+                { error: "CSV file is empty" },
+                { status: 400 }
+            );
+        }
+
+        const requiredColumns = ["session_id", "state", "timestamp"];
+        const firstRow = records[0];
+
+        for (const column of requiredColumns) {
+            if (!(column in firstRow)) {
+                return NextResponse.json(
+                    { error: `Missing required column: ${column}` },
+                    { status: 400 }
+                );
+            }
+        }
 
         return NextResponse.json({
-            message: "CSV parsed successfully",
+            message: "CSV validated successfully",
             totalRows: records.length,
             sample: records.slice(0, 5),
         });
