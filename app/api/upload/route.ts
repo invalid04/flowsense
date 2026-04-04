@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { parse } from "csv-parse/sync";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { sessions, states, transitions as transitionsTable} from "@/db/schema";
 
@@ -55,6 +55,10 @@ export async function POST(req: Request) {
                 );
             }
         }
+
+        await db.delete(transitionsTable);
+        await db.delete(sessions);
+        await db.delete(states);
 
         const sessionsMap = new Map<string, CsvRow[]>();
 
