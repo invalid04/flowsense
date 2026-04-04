@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { TrackForm } from "./TrackForm";
+import { PredictionPanel } from "./PredictionPanel";
 
 
 async function getAnalytics() {
@@ -40,6 +41,8 @@ export default async function HomePage() {
         </div>
 
         <TrackForm />
+
+        <PredictionPanel />
 
         <div className="overflow-hidden rounded-2xl border">
           <table className="w-full border-collapse text-left">
