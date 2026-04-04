@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
@@ -13,29 +13,31 @@ export async function GET() {
             .select({
                 fromState: fromStates.name,
                 toState: toStates.name,
-                count: transitions.count,
+                count: sql<number>`sum(${transitions.count})`,
             })
             .from(transitions)
             .innerJoin(fromStates, eq(transitions.fromStateId, fromStates.id))
-            .innerJoin(toStates, eq(transitions.toStateId, toStates.id));
+            .innerJoin(toStates, eq(transitions.toStateId, toStates.id))
+            .groupBy(fromStates.name, toStates.name)
 
         const totalsByFromState = new Map<string, number>();
 
         for (const row of rows) {
             totalsByFromState.set(
                 row.fromState,
-                (totalsByFromState.get(row.fromState) ?? 0) + row.count
+                (totalsByFromState.get(row.fromState) ?? 0) + Number(row.count)
             );
         }
 
         const analytics = rows.map((row) => {
+            const count = Number(row.count);
             const totalFromThisState = totalsByFromState.get(row.fromState) ?? 0;
-            const probability = totalFromThisState > 0 ? row.count / totalFromThisState : 0;
+            const probability = totalFromThisState > 0 ? count / totalFromThisState : 0;
 
             return {
                 fromState: row.fromState,
                 toState: row.toState,
-                count: row.count,
+                count,
                 probability,
             };
         });
