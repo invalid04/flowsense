@@ -27,6 +27,7 @@ export async function POST(req: Request) {
         }  
 
         const text = await file.text();
+
         const records = parse(text, {
             columns: true,
             skip_empty_lines: true, 
@@ -52,10 +53,43 @@ export async function POST(req: Request) {
             }
         }
 
+        const sessionsMap = new Map<string, CsvRow[]>();
+
+        for (const row of records) {
+            if (!sessionsMap.has(row.session_id)) {
+                sessionsMap.set(row.session_id, []);
+            }
+            sessionsMap.get(row.session_id)!.push(row);
+        }
+
+        for (const sessionRows of sessionsMap.values()) {
+            sessionRows.sort(
+                (a, b) =>
+                    new Date(a.timestamp).getTime() -
+                    new Date(b.timestamp).getTime()
+            );
+        }
+
+        const transitions: { from: string; to: string }[] = [];
+
+        for (const sessionRows of sessionsMap.values()) {
+            for (let i = 0; i < sessionRows.length - 1; i++) {
+                const current = sessionRows[i];
+                const next = sessionRows[i + 1];
+
+                transitions.push({
+                    from: current.state,
+                    to: next.state,
+                });
+            }
+        }
+
         return NextResponse.json({
-            message: "CSV validated successfully",
+            message: "Transitions generated",
             totalRows: records.length,
-            sample: records.slice(0, 5),
+            totalSessions: sessionsMap.size,
+            totalTransitions: transitions.length,
+            sampleTransitions: transitions.slice(0, 5),
         });
     } catch (error) {
         console.error("UPLOAD_ROUTE_ERROR", error);
