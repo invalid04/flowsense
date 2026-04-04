@@ -1,0 +1,4 @@
+session_id,state,timestamp
+s1,/home,2026-04-04T10:00:00Z
+s1,/dashboard,2026-04-04T10:00:05Z
+s1,/settings,2026-04-04T10:00:10Z
