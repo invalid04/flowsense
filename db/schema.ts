@@ -2,6 +2,9 @@ import { pgTable, uuid, text, timestamp, integer, uniqueIndex } from "drizzle-or
 
 export const sessions = pgTable("sessions", {
     id: uuid("id").defaultRandom().primaryKey(),
+    accountId: uuid("account_id")
+        .notNull()
+        .references(() => accounts.id, { onDelete: "cascade" }),
     sessionKey: text("session_key").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull()
 });
@@ -18,8 +21,18 @@ export const states = pgTable(
     })
 ); 
 
+export const accounts = pgTable("accounts", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    apiKey: text("api_key").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const transitions = pgTable("transitions", {
     id: uuid("id").defaultRandom().primaryKey(),
+    accountId: uuid("account_id")
+    .notNull()
+    .references(() => accounts.id, { onDelete: "cascade" }),
     sessionId: uuid("session_id")
         .notNull()
         .references(() => sessions.id, { onDelete: "cascade" }), 
