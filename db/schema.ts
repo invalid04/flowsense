@@ -1,5 +1,12 @@
 import { pgTable, uuid, text, timestamp, integer, uniqueIndex } from "drizzle-orm/pg-core";
 
+export const accounts = pgTable("accounts", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    apiKey: text("api_key").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const sessions = pgTable("sessions", {
     id: uuid("id").defaultRandom().primaryKey(),
     accountId: uuid("account_id")
@@ -20,13 +27,6 @@ export const states = pgTable(
         nameIdx: uniqueIndex("states_name_idx").on(table.name),
     })
 ); 
-
-export const accounts = pgTable("accounts", {
-    id: uuid("id").defaultRandom().primaryKey(),
-    name: text("name").notNull(),
-    apiKey: text("api_key").notNull().unique(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const transitions = pgTable("transitions", {
     id: uuid("id").defaultRandom().primaryKey(),
