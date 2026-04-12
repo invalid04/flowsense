@@ -3,6 +3,7 @@ import { TrackForm } from "./TrackForm";
 import { PredictionPanel } from "./PredictionPanel";
 import { UploadForm } from "./UploadForm";
 import { StateTransitionsChart } from "./StateTransitionsChart";
+import { DropoffInsightCard } from "./DropoffInsightCard";
 
 async function getAnalytics() {
   const headersList = await headers();
@@ -20,6 +21,22 @@ async function getAnalytics() {
   return res.json();
 }
 
+async function getDropoffInsight() {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+
+  const res = await fetch(`${protocol}://${host}/api/insights/dropoff`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch dropoff insight");
+  }
+
+  return res.json();
+}
+
 type Transition = {
   fromState: string;
   toState: string;
@@ -28,8 +45,13 @@ type Transition = {
 };
 
 export default async function HomePage() {
-  const data = await getAnalytics();
+  const [data, dropoffData] = await Promise.all([
+    getAnalytics(),
+    getDropoffInsight(),
+  ]);
   const transitions: Transition[] = data.transitions ?? [];
+  const biggestDropoff = dropoffData.biggestDropoff ?? null;
+  const dropoffCandidates = dropoffData.candidates ?? [];
   const totalTransitions = transitions.reduce((sum, item) => sum + item.count, 0);
   const uniqueStates = new Set(
     transitions.flatMap((item) => [item.fromState, item.toState])
@@ -95,17 +117,23 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-2">
+        <section className="grid gap-4 lg:grid-cols-3">
           <div className="animate-rise" style={{ animationDelay: "120ms" }}>
             <TrackForm />
           </div>
           <div className="animate-rise" style={{ animationDelay: "180ms" }}>
             <PredictionPanel />
           </div>
-          <div className="animate-rise lg:col-span-2" style={{ animationDelay: "240ms" }}>
+          <div className="animate-rise" style={{ animationDelay: "220ms" }}>
+            <DropoffInsightCard
+              biggestDropoff={biggestDropoff}
+              candidateCount={dropoffCandidates.length}
+            />
+          </div>
+          <div className="animate-rise lg:col-span-3" style={{ animationDelay: "240ms" }}>
             <StateTransitionsChart />
           </div>
-          <div className="animate-rise lg:col-span-2" style={{ animationDelay: "300ms" }}>
+          <div className="animate-rise lg:col-span-3" style={{ animationDelay: "300ms" }}>
             <UploadForm />
           </div>
         </section>
