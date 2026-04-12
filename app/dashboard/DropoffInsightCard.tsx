@@ -16,7 +16,7 @@ export function DropoffInsightCard({
 }: DropoffInsightCardProps) {
   return (
     <div className="glass-panel h-full rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Biggest Drop-Off</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Drop-Off Insight</h2>
       <p className="mt-1 text-sm text-slate-500">
         Where users enter but do not continue.
       </p>
