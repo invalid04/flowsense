@@ -31,9 +31,9 @@ export function PredictionPanel() {
   };
 
   return (
-    <div className="glass-panel flex h-full flex-col rounded-3xl p-5 md:p-6">
+    <div className="glass-panel flex h-full min-h-[17.5rem] flex-col rounded-3xl p-5 md:p-6">
       <h2 className="text-lg font-semibold text-slate-900">Prediction Engine</h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 min-h-10 text-sm text-slate-500">
         Query likely next behavior from the current model.
       </p>
 
@@ -52,7 +52,7 @@ export function PredictionPanel() {
         </button>
       </form>
 
-      {result && (
+      {result ? (
         <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4">
           {"error" in result && result.error ? (
             <p className="text-sm font-medium text-red-700">{result.error}</p>
@@ -76,6 +76,10 @@ export function PredictionPanel() {
               {result.message ?? "No prediction available."}
             </p>
           )}
+        </div>
+      ) : (
+        <div className="mt-4 flex-1 rounded-2xl border border-dashed border-[var(--panel-border)] bg-white/45 p-4 text-sm text-slate-500">
+          Enter a state and run prediction to view likely next step confidence.
         </div>
       )}
     </div>

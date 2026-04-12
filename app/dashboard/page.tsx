@@ -4,6 +4,7 @@ import { UploadForm } from "./UploadForm";
 import { StateTransitionsChart } from "./StateTransitionsChart";
 import { DropoffInsightCard } from "./DropoffInsightCard";
 import { ConversionPathInsightCard } from "./ConversionPathInsightCard";
+import { LoopInsightCard } from "./LoopInsightCard";
 import { db } from "@/db";
 import { sessions as sessionsTable, transitions as transitionsTable } from "@/db/schema";
 import { sql } from "drizzle-orm";
@@ -58,6 +59,17 @@ type ConversionPathResult = {
   error: string | null;
 };
 
+type LoopInsight = {
+  type: "two-state" | "self";
+  states: string[];
+  totalCount: number;
+};
+
+type LoopInsightResult = {
+  topLoop: LoopInsight | null;
+  error: string | null;
+};
+
 async function getConversionPathInsight(): Promise<ConversionPathResult> {
   const headersList = await headers();
   const host = headersList.get("host");
@@ -106,6 +118,61 @@ async function getConversionPathInsight(): Promise<ConversionPathResult> {
   }
 }
 
+async function getLoopInsight(): Promise<LoopInsightResult> {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+
+  try {
+    const res = await fetch(`${protocol}://${host}/api/insights/loops`, {
+      cache: "no-store",
+    });
+
+    const data = (await res.json()) as Partial<{ topLoop: LoopInsight }> & {
+      error?: string;
+    };
+
+    if (!res.ok) {
+      return {
+        topLoop: null,
+        error: data.error ?? "Failed to fetch loop insight",
+      };
+    }
+
+    if (!data.topLoop) {
+      return {
+        topLoop: null,
+        error: null,
+      };
+    }
+
+    if (
+      !data.topLoop.type ||
+      !Array.isArray(data.topLoop.states) ||
+      typeof data.topLoop.totalCount !== "number"
+    ) {
+      return {
+        topLoop: null,
+        error: "Invalid loop insight payload",
+      };
+    }
+
+    return {
+      topLoop: {
+        type: data.topLoop.type,
+        states: data.topLoop.states,
+        totalCount: data.topLoop.totalCount,
+      },
+      error: null,
+    };
+  } catch {
+    return {
+      topLoop: null,
+      error: "Failed to fetch loop insight",
+    };
+  }
+}
+
 type Transition = {
   fromState: string;
   toState: string;
@@ -136,10 +203,12 @@ async function getDatasetStatus(): Promise<DatasetStatus> {
 }
 
 export default async function HomePage() {
-  const [data, dropoffData, conversionPathResult, datasetStatus] = await Promise.all([
+  const [data, dropoffData, conversionPathResult, loopInsightResult, datasetStatus] =
+    await Promise.all([
     getAnalytics(),
     getDropoffInsight(),
     getConversionPathInsight(),
+    getLoopInsight(),
     getDatasetStatus(),
   ]);
   const transitions: Transition[] = data.transitions ?? [];
@@ -147,6 +216,7 @@ export default async function HomePage() {
   const dropoffCandidates = dropoffData.candidates ?? [];
   const { insight: conversionPathInsight, error: conversionPathError } =
     conversionPathResult;
+  const { topLoop, error: loopInsightError } = loopInsightResult;
   const totalTransitions = transitions.reduce((sum, item) => sum + item.count, 0);
   const uniqueStates = new Set(
     transitions.flatMap((item) => [item.fromState, item.toState])
@@ -241,26 +311,32 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-12">
-          <div className="animate-rise lg:col-span-7" style={{ animationDelay: "120ms" }}>
+        <section className="grid gap-4">
+          <div className="animate-rise" style={{ animationDelay: "120ms" }}>
             <ConversionPathInsightCard
               insight={conversionPathInsight}
               error={conversionPathError}
             />
           </div>
-          <div className="animate-rise lg:col-span-5" style={{ animationDelay: "160ms" }}>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-3">
+          <div className="animate-rise" style={{ animationDelay: "200ms" }}>
+            <PredictionPanel />
+          </div>
+          <div className="animate-rise" style={{ animationDelay: "220ms" }}>
             <DropoffInsightCard
               biggestDropoff={biggestDropoff}
               candidateCount={dropoffCandidates.length}
             />
           </div>
+          <div className="animate-rise" style={{ animationDelay: "240ms" }}>
+            <LoopInsightCard topLoop={topLoop} error={loopInsightError} />
+          </div>
         </section>
 
         <section className="space-y-4">
-          <div className="animate-rise max-w-4xl" style={{ animationDelay: "200ms" }}>
-            <PredictionPanel />
-          </div>
-          <div className="animate-rise" style={{ animationDelay: "240ms" }}>
+          <div className="animate-rise" style={{ animationDelay: "260ms" }}>
             <StateTransitionsChart />
           </div>
           <div

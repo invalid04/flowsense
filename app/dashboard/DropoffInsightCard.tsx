@@ -15,16 +15,16 @@ export function DropoffInsightCard({
   candidateCount,
 }: DropoffInsightCardProps) {
   return (
-    <div className="glass-panel h-full rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Drop-Off Insight</h2>
-      <p className="mt-1 text-sm text-slate-500">
+    <div className="glass-panel flex h-full min-h-[17.5rem] flex-col rounded-3xl p-5 md:p-6">
+      <h2 className="text-lg font-semibold text-slate-900">Drop-Off</h2>
+      <p className="mt-1 min-h-10 text-sm text-slate-500">
         Where users enter but do not continue.
       </p>
 
       {biggestDropoff ? (
-        <div className="mt-4 space-y-3 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4">
+        <div className="mt-4 flex-1 space-y-3 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4">
           <p className="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
-            Drop-off State
+            Terminal State
           </p>
           <p className="font-mono text-xl font-bold text-slate-900">
             {biggestDropoff.stateName}
@@ -44,7 +44,7 @@ export function DropoffInsightCard({
           </p>
         </div>
       ) : (
-        <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4 text-sm text-slate-600">
+        <div className="mt-4 flex-1 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4 text-sm text-slate-600">
           No drop-off states detected yet.
         </div>
       )}

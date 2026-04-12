@@ -29,7 +29,7 @@ export function ConversionPathInsightCard({
 }: ConversionPathInsightCardProps) {
   return (
     <div className="glass-panel h-full rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Primary Conversion Path</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Conversion Path</h2>
       <p className="mt-1 text-sm text-slate-500">Primary journey signal to conversion.</p>
 
       {error ? (
