@@ -31,13 +31,13 @@ export function PredictionPanel() {
   };
 
   return (
-    <div className="glass-panel rounded-3xl p-5 md:p-6">
+    <div className="glass-panel flex h-full flex-col rounded-3xl p-5 md:p-6">
       <h2 className="text-lg font-semibold text-slate-900">Prediction Engine</h2>
       <p className="mt-1 text-sm text-slate-500">
         Query likely next behavior from the current model.
       </p>
 
-      <form onSubmit={handlePredict} className="mt-4 flex flex-col gap-3 sm:flex-row">
+      <form onSubmit={handlePredict} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="field flex-1">
           <span className="field-label">Current State</span>
           <input
@@ -47,7 +47,7 @@ export function PredictionPanel() {
             placeholder="/home"
           />
         </label>
-        <button className="enterprise-btn mt-auto" type="submit" disabled={loading}>
+        <button className="enterprise-btn w-full sm:w-auto" type="submit" disabled={loading}>
           {loading ? "Predicting..." : "Run Prediction"}
         </button>
       </form>

@@ -30,7 +30,7 @@ export function TrackForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="glass-panel space-y-4 rounded-3xl p-5 md:p-6"
+      className="glass-panel flex h-full flex-col space-y-4 rounded-3xl p-5 md:p-6"
     >
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Track Transition Event</h2>
@@ -71,7 +71,11 @@ export function TrackForm() {
         </label>
       </div>
 
-      <button type="submit" className="enterprise-btn w-full md:w-auto" disabled={loading}>
+      <button
+        type="submit"
+        className="enterprise-btn mt-auto w-full md:w-auto"
+        disabled={loading}
+      >
         {loading ? "Tracking..." : "Commit Transition"}
       </button>
     </form>

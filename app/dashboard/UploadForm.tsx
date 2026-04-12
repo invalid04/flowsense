@@ -44,14 +44,17 @@ export function UploadForm() {
   };
 
   return (
-    <div className="glass-panel rounded-3xl p-5 md:p-6">
+    <div className="glass-panel flex h-full flex-col rounded-3xl p-5 md:p-6">
       <h2 className="text-lg font-semibold text-slate-900">Upload Event Data</h2>
       <p className="mt-1 text-sm text-slate-500">
         Import a CSV to refresh sessions and transition probabilities.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="field flex-1">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+      >
+        <label className="field min-w-0">
           <span className="field-label">CSV File</span>
           <input
             type="file"
@@ -60,13 +63,13 @@ export function UploadForm() {
             className="enterprise-input"
           />
         </label>
-        <button type="submit" disabled={loading} className="enterprise-btn">
+        <button type="submit" disabled={loading} className="enterprise-btn w-full sm:w-auto">
           {loading ? "Uploading..." : "Upload CSV"}
         </button>
       </form>
 
       {message && (
-        <p className="mt-3 text-sm text-slate-700">
+        <p className="mt-3 break-words text-sm text-slate-700">
           {message}
         </p>
       )}

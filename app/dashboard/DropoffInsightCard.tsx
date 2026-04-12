@@ -15,16 +15,16 @@ export function DropoffInsightCard({
   candidateCount,
 }: DropoffInsightCardProps) {
   return (
-    <div className="glass-panel rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Drop-off Insight</h2>
+    <div className="glass-panel h-full rounded-3xl p-5 md:p-6">
+      <h2 className="text-lg font-semibold text-slate-900">Biggest Drop-Off</h2>
       <p className="mt-1 text-sm text-slate-500">
-        State with the highest inbound volume and no outbound transitions.
+        Where users enter but do not continue.
       </p>
 
       {biggestDropoff ? (
         <div className="mt-4 space-y-3 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4">
           <p className="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
-            Biggest Drop-off State
+            Drop-off State
           </p>
           <p className="font-mono text-xl font-bold text-slate-900">
             {biggestDropoff.stateName}
