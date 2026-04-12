@@ -13,6 +13,9 @@ export const sessions = pgTable("sessions", {
         .notNull()
         .references(() => accounts.id, { onDelete: "cascade" }),
     sessionKey: text("session_key").notNull().unique(),
+    lastStateId: uuid("last_state_id").references(() => states.id, {
+        onDelete: "set null",
+      }),
     createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
