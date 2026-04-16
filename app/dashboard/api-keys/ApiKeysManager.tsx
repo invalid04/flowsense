@@ -1,22 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
-type ApiKeyRecord = {
+type ApiKeyListRecord = {
+  id: string;
+  accountId: string;
+  label: string;
+  maskedKey: string;
+  revokedAt: string | null;
+  createdAt: string;
+};
+
+type ApiKeyCreateRecord = {
   id: string;
   accountId: string;
   key: string;
   label: string;
+  revokedAt: string | null;
   createdAt: string;
 };
 
 type ListResponse = {
-  keys?: ApiKeyRecord[];
+  keys?: ApiKeyListRecord[];
   error?: string;
 };
 
 type CreateResponse = {
-  key?: ApiKeyRecord;
+  key?: ApiKeyCreateRecord;
+  error?: string;
+};
+
+type RevokeResponse = {
+  key?: ApiKeyListRecord;
   error?: string;
 };
 
@@ -37,33 +53,57 @@ function formatDate(value: string) {
   }).format(date);
 }
 
+function toListRecord(created: ApiKeyCreateRecord): ApiKeyListRecord {
+  return {
+    id: created.id,
+    accountId: created.accountId,
+    label: created.label,
+    maskedKey: maskApiKey(created.key),
+    revokedAt: created.revokedAt,
+    createdAt: created.createdAt,
+  };
+}
+
 export function ApiKeysManager() {
-  const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
+  const [keys, setKeys] = useState<ApiKeyListRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [sendingTestToken, setSendingTestToken] = useState<string | null>(null);
   const [label, setLabel] = useState("Default Key");
   const [message, setMessage] = useState<string | null>(null);
+  const [lastCreatedKey, setLastCreatedKey] = useState<ApiKeyCreateRecord | null>(null);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
 
     const run = async () => {
-      const res = await fetch("/api/api-keys");
-      const data: ListResponse = await res.json();
+      try {
+        const res = await fetch("/api/api-keys");
+        const data: ListResponse = await res.json();
 
-      if (isCancelled) return;
+        if (isCancelled) return;
 
-      if (!res.ok) {
-        setMessage(data.error ?? "Failed to load API keys.");
-        setIsLoading(false);
-        return;
+        if (!res.ok) {
+          setMessage(data.error ?? "Failed to load API keys.");
+          setIsLoading(false);
+          return;
+        }
+
+        const sorted = [...(data.keys ?? [])].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setKeys(sorted);
+      } catch {
+        if (!isCancelled) {
+          setMessage("Failed to load API keys.");
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
-
-      const sorted = [...(data.keys ?? [])].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      setKeys(sorted);
-      setIsLoading(false);
     };
 
     void run();
@@ -78,35 +118,134 @@ export function ApiKeysManager() {
     setIsCreating(true);
     setMessage(null);
 
-    const res = await fetch("/api/api-keys", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ label }),
-    });
+    try {
+      const res = await fetch("/api/api-keys", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ label }),
+      });
 
-    const data: CreateResponse = await res.json();
-    if (!res.ok || !data.key) {
-      setMessage(data.error ?? "Failed to generate API key.");
+      const data: CreateResponse = await res.json();
+      const createdKey = data.key;
+
+      if (!res.ok || !createdKey) {
+        setMessage(data.error ?? "Failed to generate API key.");
+        return;
+      }
+
+      setKeys((current) => [toListRecord(createdKey), ...current]);
+      setLastCreatedKey(createdKey);
+      setLabel("Default Key");
+      setMessage("API key created successfully.");
+    } catch {
+      setMessage("Failed to generate API key.");
+    } finally {
       setIsCreating(false);
-      return;
     }
-
-    setKeys((current) => [data.key, ...current]);
-    setLabel("Default Key");
-    setMessage("API key generated successfully.");
-    setIsCreating(false);
   };
 
-  const copyKey = async (value: string) => {
+  const copyValue = async (value: string, token: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      setMessage("API key copied to clipboard.");
+      setCopiedToken(token);
+      setTimeout(() => {
+        setCopiedToken((current) => (current === token ? null : current));
+      }, 1400);
     } catch {
-      setMessage("Clipboard access failed. Copy manually from the row.");
+      setMessage("Clipboard access failed. Copy manually.");
     }
   };
+
+  const revokeKey = async (id: string) => {
+    const shouldRevoke = window.confirm("Revoke this API key? It will stop ingesting immediately.");
+    if (!shouldRevoke) return;
+
+    setRevokingId(id);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/api-keys/${id}/revoke`, { method: "POST" });
+      const data: RevokeResponse = await res.json();
+      const revokedKey = data.key;
+
+      if (!res.ok || !revokedKey) {
+        setMessage(data.error ?? "Failed to revoke API key.");
+        return;
+      }
+
+      setKeys((current) =>
+        current.map((item) => (item.id === id ? revokedKey : item))
+      );
+
+      setLastCreatedKey((current) => {
+        if (!current || current.id !== id) return current;
+        return { ...current, revokedAt: revokedKey.revokedAt ?? new Date().toISOString() };
+      });
+
+      setMessage("API key revoked.");
+    } catch {
+      setMessage("Failed to revoke API key.");
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  const sendTestEvent = async (apiKey: string, token: string) => {
+    setSendingTestToken(token);
+    setMessage(null);
+
+    try {
+      const res = await fetch("/api/ingest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          sessionId: `test_session_${Date.now()}`,
+          state: "/test-event",
+        }),
+      });
+
+      if (!res.ok) {
+        setMessage("Invalid API key or ingestion failed.");
+        return;
+      }
+
+      setMessage("Test event sent successfully.");
+    } catch {
+      setMessage("Invalid API key or ingestion failed.");
+    } finally {
+      setSendingTestToken(null);
+    }
+  };
+
+  const newestActiveKey = useMemo(
+    () => keys.find((item) => item.revokedAt === null) ?? null,
+    [keys]
+  );
+
+  const preferredKey = useMemo(() => {
+    if (lastCreatedKey && lastCreatedKey.revokedAt === null) {
+      return lastCreatedKey.key;
+    }
+
+    return "fs_live_xxx";
+  }, [lastCreatedKey]);
+
+  const baseUrl = getBaseUrl();
+  const sdkScriptUrl = `${baseUrl}/flowsense-sdk.js`;
+  const ingestEndpoint = `${baseUrl}/api/ingest`;
+
+  const installSnippet = `<script src=\"${sdkScriptUrl}\"></script>`;
+
+  const initSnippet = `FlowSense.init({\n  apiKey: \"${preferredKey}\",\n  endpoint: \"${ingestEndpoint}\"\n});`;
+
+  const trackSnippet = `FlowSense.track(\"/home\");`;
+
+  const fullSnippet = `${installSnippet}\n<script>\n  ${initSnippet.replace(/\n/g, "\n  ")}\n\n  ${trackSnippet}\n</script>`;
 
   return (
     <div className="space-y-4">
@@ -135,6 +274,25 @@ export function ApiKeysManager() {
         </form>
       </section>
 
+      {lastCreatedKey && (
+        <section className="glass-panel animate-rise rounded-3xl border border-[var(--accent)]/20 bg-[var(--accent-soft)]/35 p-5 md:p-6">
+          <h3 className="text-base font-semibold text-slate-900">API key created successfully</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Store this securely. This full key will not be shown again.
+          </p>
+          <div className="mt-3 rounded-xl border border-[var(--panel-border)] bg-white px-4 py-3 font-mono text-sm text-slate-800">
+            {lastCreatedKey.key}
+          </div>
+          <button
+            type="button"
+            onClick={() => copyValue(lastCreatedKey.key, "created-key")}
+            className="mt-3 rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            {copiedToken === "created-key" ? "Copied" : "Copy key"}
+          </button>
+        </section>
+      )}
+
       <section className="glass-panel animate-rise overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
         <div className="border-b border-[var(--panel-border)] px-5 py-4 md:px-6">
           <h3 className="text-lg font-semibold text-slate-900">API Key Registry</h3>
@@ -161,6 +319,9 @@ export function ApiKeysManager() {
                     Key
                   </th>
                   <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
+                    Status
+                  </th>
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
                     Created
                   </th>
                   <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
@@ -178,19 +339,67 @@ export function ApiKeysManager() {
                       {item.label}
                     </td>
                     <td className="px-5 py-3 font-mono text-sm text-slate-700 md:px-6">
-                      {maskApiKey(item.key)}
+                      {item.maskedKey}
+                    </td>
+                    <td className="px-5 py-3 text-sm md:px-6">
+                      <span
+                        className={
+                          item.revokedAt
+                            ? "rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700"
+                            : "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                        }
+                      >
+                        {item.revokedAt ? "Revoked" : "Active"}
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-sm text-slate-600 md:px-6">
                       {formatDate(item.createdAt)}
                     </td>
                     <td className="px-5 py-3 md:px-6">
-                      <button
-                        type="button"
-                        onClick={() => copyKey(item.key)}
-                        className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        Copy
-                      </button>
+                      {item.revokedAt ? (
+                        <span className="text-xs font-semibold text-slate-500">Unavailable</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const canCopyFullValue = lastCreatedKey?.id === item.id && lastCreatedKey.revokedAt === null;
+                              await copyValue(
+                                canCopyFullValue ? lastCreatedKey.key : item.maskedKey,
+                                `copy-row-${item.id}`
+                              );
+                              if (!canCopyFullValue) {
+                                setMessage("Copied masked key. Create a new key to copy full value.");
+                              }
+                            }}
+                            className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            {copiedToken === `copy-row-${item.id}` ? "Copied" : "Copy"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!lastCreatedKey || lastCreatedKey.id !== item.id || lastCreatedKey.revokedAt !== null) {
+                                setMessage("Create a new key to send a test event from this panel.");
+                                return;
+                              }
+                              void sendTestEvent(lastCreatedKey.key, `send-test-${item.id}`);
+                            }}
+                            disabled={sendingTestToken === `send-test-${item.id}`}
+                            className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {sendingTestToken === `send-test-${item.id}` ? "Sending..." : "Send Test"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => revokeKey(item.id)}
+                            disabled={revokingId === item.id}
+                            className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {revokingId === item.id ? "Revoking..." : "Revoke"}
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -200,9 +409,109 @@ export function ApiKeysManager() {
         )}
       </section>
 
-      {message && (
-        <p className="text-sm font-medium text-slate-700">{message}</p>
-      )}
+      <section className="glass-panel animate-rise rounded-3xl p-5 md:p-6" style={{ animationDelay: "120ms" }}>
+        <h3 className="text-lg font-semibold text-slate-900">Developer Quickstart</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Embed the SDK and initialize it with your API key to begin tracking behavior flows.
+        </p>
+
+        {!lastCreatedKey && newestActiveKey && (
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+            For security, full keys are only shown at creation time. Create a new key for ready-to-paste snippets.
+          </p>
+        )}
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Install FlowSense</p>
+              <button
+                type="button"
+                onClick={() => copyValue(installSnippet, "copy-install")}
+                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                {copiedToken === "copy-install" ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+              <code>{installSnippet}</code>
+            </pre>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Initialize</p>
+              <button
+                type="button"
+                onClick={() => copyValue(initSnippet, "copy-init")}
+                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                {copiedToken === "copy-init" ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+              <code>{initSnippet}</code>
+            </pre>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Track Example</p>
+              <button
+                type="button"
+                onClick={() => copyValue(trackSnippet, "copy-track")}
+                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                {copiedToken === "copy-track" ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+              <code>{trackSnippet}</code>
+            </pre>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Drop-In Snippet</p>
+              <button
+                type="button"
+                onClick={() => copyValue(fullSnippet, "copy-full")}
+                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                {copiedToken === "copy-full" ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+              <code>{fullSnippet}</code>
+            </pre>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!lastCreatedKey || lastCreatedKey.revokedAt !== null) {
+                  setMessage("Create a new active key, then send a test event.");
+                  return;
+                }
+                void sendTestEvent(lastCreatedKey.key, "send-test-quickstart");
+              }}
+              disabled={sendingTestToken === "send-test-quickstart"}
+              className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {sendingTestToken === "send-test-quickstart" ? "Sending..." : "Send Test Event"}
+            </button>
+            <a
+              href="/dashboard"
+              className="text-xs font-semibold text-slate-600 underline decoration-dotted underline-offset-4 transition hover:text-slate-900"
+            >
+              View this event in your dashboard
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {message && <p className="text-sm font-medium text-slate-700">{message}</p>}
     </div>
   );
 }

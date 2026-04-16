@@ -29,6 +29,20 @@
       "when": 1776317861585,
       "tag": "0003_late_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776355200000,
+      "tag": "0004_dusty_oracle",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776320534822,
+      "tag": "0005_volatile_eternals",
+      "breakpoints": true
     }
   ]
 }

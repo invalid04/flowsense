@@ -56,5 +56,6 @@ export const apiKeys = pgTable("api_keys", {
       .references(() => accounts.id, { onDelete: "cascade" }),
     key: text("key").notNull().unique(),
     label: text("label").notNull().default("Default Key"),
+    revokedAt: timestamp("revoked_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   });

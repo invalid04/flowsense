@@ -1,18 +1,18 @@
 import { db }  from "@/db";
 import { accounts, apiKeys } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 export async function getAccountByApiKey(apiKey: string) {
     if (!apiKey) return null;
 
     const apiKeyRow = await db.query.apiKeys.findFirst({
-        where: eq(apiKeys.key, apiKey)
+        where: and(eq(apiKeys.key, apiKey), isNull(apiKeys.revokedAt))
     });
 
     if (!apiKeyRow) return null;
 
     const account = await db.query.accounts.findFirst({
-        where: eq(accounts.apiKey, apiKeyRow.accountId),
+        where: eq(accounts.id, apiKeyRow.accountId),
     });
 
     return account ?? null;
