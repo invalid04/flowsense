@@ -13,6 +13,7 @@ import {
 import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getOrCreateAccount } from "@/lib/getOrCreateAccount";
+import { resolveConversionStatesForAccount } from "@/lib/resolveConversionStatesForAccount";
 
 type ConversionEndedReason =
   | "reached_conversion_state"
@@ -42,13 +43,6 @@ type LoopInsightResult = {
   topLoop: LoopInsight | null;
   error: string | null;
 };
-
-const DEFAULT_CONVERSION_STATES = [
-  "/confirmation",
-  "/checkout",
-  "/signup",
-  "/contact-sales",
-];
 
 const MAX_STEPS = 10;
 
@@ -140,7 +134,9 @@ async function getDropoffInsight(accountId: string) {
 
 async function getConversionPathInsight(accountId: string): Promise<ConversionPathResult> {
   const startStateParam = "/home";
-  const conversionStates = new Set(DEFAULT_CONVERSION_STATES);
+  const conversionStates = new Set(
+    await resolveConversionStatesForAccount({ accountId })
+  );
 
   try {
     const startState = await db.query.states.findFirst({

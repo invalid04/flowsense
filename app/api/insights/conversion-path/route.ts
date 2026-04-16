@@ -3,13 +3,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
-
-const DEFAULT_CONVERSION_STATES = [
-  "/confirmation",
-  "/checkout",
-  "/signup",
-  "/contact-sales",
-];
+import { resolveConversionStatesForAccount } from "@/lib/resolveConversionStatesForAccount";
 
 const MAX_STEPS = 10;
 
@@ -21,12 +15,12 @@ export async function GET(req: NextRequest) {
 
     const conversionStatesParam = searchParams.get("conversionStates");
     const conversionStates = new Set(
-      conversionStatesParam
-        ? conversionStatesParam
-            .split(",")
-            .map((state) => state.trim())
-            .filter(Boolean)
-        : DEFAULT_CONVERSION_STATES
+      await resolveConversionStatesForAccount({
+        accountId: account.id,
+        requestedStates: conversionStatesParam
+          ? conversionStatesParam.split(",")
+          : undefined,
+      })
     );
 
     const startState = await db.query.states.findFirst({

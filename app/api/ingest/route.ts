@@ -1,8 +1,75 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { sessions, states, transitions, accounts } from "@/db/schema";
+import { sessions, states, transitions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getAccountByApiKey, extractApiKey } from "@/lib/getAccountByApiKey";
+
+function isUniqueViolation(error: unknown) {
+    return (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "23505"
+    );
+}
+
+async function getOrCreateSession(sessionId: string, accountId: string) {
+    let session = await db.query.sessions.findFirst({
+        where: and(
+            eq(sessions.sessionKey, sessionId),
+            eq(sessions.accountId, accountId)
+        )
+    });
+
+    if (session) return session;
+
+    const existingBySessionKey = await db.query.sessions.findFirst({
+        where: eq(sessions.sessionKey, sessionId),
+    });
+
+    const scopedSessionKey =
+        existingBySessionKey && existingBySessionKey.accountId !== accountId
+            ? `${accountId}:${sessionId}`
+            : sessionId;
+
+    session = await db.query.sessions.findFirst({
+        where: and(
+            eq(sessions.sessionKey, scopedSessionKey),
+            eq(sessions.accountId, accountId)
+        )
+    });
+
+    if (session) return session;
+
+    try {
+        const [newSession] = await db
+            .insert(sessions)
+            .values({
+                sessionKey: scopedSessionKey,
+                accountId,
+            })
+            .returning();
+
+        return newSession;
+    } catch (error) {
+        if (!isUniqueViolation(error)) {
+            throw error;
+        }
+
+        const fallbackSession = await db.query.sessions.findFirst({
+            where: and(
+                eq(sessions.sessionKey, scopedSessionKey),
+                eq(sessions.accountId, accountId)
+            ),
+        });
+
+        if (!fallbackSession) {
+            throw error;
+        }
+
+        return fallbackSession;
+    }
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -26,24 +93,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        let session = await db.query.sessions.findFirst({
-            where: and(
-                eq(sessions.sessionKey, sessionId),
-                eq(sessions.accountId, account.id)
-            )
-        });
-
-        if (!session) {
-            const [newSession] = await db
-                .insert(sessions)
-                .values({
-                    sessionKey: sessionId,
-                    accountId: account.id,
-                })
-                .returning();
-
-            session = newSession;
-        }
+        const session = await getOrCreateSession(sessionId, account.id);
 
         let currentState = await db.query.states.findFirst({
             where: eq(states.name, state)
