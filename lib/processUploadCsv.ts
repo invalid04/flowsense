@@ -41,10 +41,12 @@ export function parseCsvText(text: string) {
   return records;
 }
 
-export async function processCsvRecords(records: CsvRow[]): Promise<UploadSummary> {
-  await db.delete(transitionsTable);
-  await db.delete(sessions);
-  await db.delete(states);
+export async function processCsvRecords(
+  records: CsvRow[],
+  accountId: string
+): Promise<UploadSummary> {
+  await db.delete(transitionsTable).where(eq(transitionsTable.accountId, accountId));
+  await db.delete(sessions).where(eq(sessions.accountId, accountId));
 
   const sessionsMap = new Map<string, CsvRow[]>();
 
@@ -78,13 +80,13 @@ export async function processCsvRecords(records: CsvRow[]): Promise<UploadSummar
 
   for (const item of derivedTransitions) {
     let session = await db.query.sessions.findFirst({
-      where: eq(sessions.sessionKey, item.sessionKey),
+      where: and(eq(sessions.sessionKey, item.sessionKey), eq(sessions.accountId, accountId)),
     });
 
     if (!session) {
       const inserted = await db
         .insert(sessions)
-        .values({ sessionKey: item.sessionKey })
+        .values({ sessionKey: item.sessionKey, accountId })
         .returning();
       session = inserted[0];
     }
@@ -111,7 +113,8 @@ export async function processCsvRecords(records: CsvRow[]): Promise<UploadSummar
       where: and(
         eq(transitionsTable.sessionId, session.id),
         eq(transitionsTable.fromStateId, fromState.id),
-        eq(transitionsTable.toStateId, toState.id)
+        eq(transitionsTable.toStateId, toState.id),
+        eq(transitionsTable.accountId, accountId)
       ),
     });
 
@@ -122,6 +125,7 @@ export async function processCsvRecords(records: CsvRow[]): Promise<UploadSummar
         .where(eq(transitionsTable.id, existingTransition.id));
     } else {
       await db.insert(transitionsTable).values({
+        accountId,
         sessionId: session.id,
         fromStateId: fromState.id,
         toStateId: toState.id,
@@ -137,7 +141,7 @@ export async function processCsvRecords(records: CsvRow[]): Promise<UploadSummar
   };
 }
 
-export async function processCsvText(text: string): Promise<UploadSummary> {
+export async function processCsvText(text: string, accountId: string): Promise<UploadSummary> {
   const records = parseCsvText(text);
-  return processCsvRecords(records);
+  return processCsvRecords(records, accountId);
 }

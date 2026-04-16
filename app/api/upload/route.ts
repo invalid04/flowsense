@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { parse } from "csv-parse/sync";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
 import { sessions, states, transitions as transitionsTable} from "@/db/schema";
+import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 type CsvRow = {
     session_id: string;
@@ -12,6 +13,7 @@ type CsvRow = {
 
 export async function POST(req: Request) {
     try {
+        const account = await getOrCreateAccount();
         const formData = await req.formData();
         const file = formData.get("file");
 
@@ -56,9 +58,12 @@ export async function POST(req: Request) {
             }
         }
 
-        await db.delete(transitionsTable);
-        await db.delete(sessions);
-        await db.delete(states);
+        await db
+            .delete(transitionsTable)
+            .where(eq(transitionsTable.accountId, account.id));
+        await db
+            .delete(sessions)
+            .where(eq(sessions.accountId, account.id));
 
         const sessionsMap = new Map<string, CsvRow[]>();
 
@@ -94,13 +99,19 @@ export async function POST(req: Request) {
 
         for (const item of derivedTransitions) {
             let session = await db.query.sessions.findFirst({
-                where: eq(sessions.sessionKey, item.sessionKey),
+                where: and(
+                    eq(sessions.sessionKey, item.sessionKey),
+                    eq(sessions.accountId, account.id),
+                ),
             });
 
             if (!session) {
                 const inserted = await db 
                     .insert(sessions)
-                    .values({ sessionKey: item.sessionKey })
+                    .values({
+                        sessionKey: item.sessionKey,
+                        accountId: account.id,
+                    })
                     .returning();
 
                 session = inserted[0];
@@ -136,7 +147,8 @@ export async function POST(req: Request) {
                 where: and(
                     eq(transitionsTable.sessionId, session.id),
                     eq(transitionsTable.fromStateId, fromState.id),
-                    eq(transitionsTable.toStateId, toState.id)
+                    eq(transitionsTable.toStateId, toState.id),
+                    eq(transitionsTable.accountId, account.id),
                 ),
             });
 
@@ -147,6 +159,7 @@ export async function POST(req: Request) {
                     .where(eq(transitionsTable.id, existingTransition.id))
             } else {
                 await db.insert(transitionsTable).values({
+                    accountId: account.id,
                     sessionId: session.id,
                     fromStateId: fromState.id,
                     toStateId: toState.id,
@@ -163,6 +176,13 @@ export async function POST(req: Request) {
             totalTransitions: derivedTransitions.length,
         });
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         console.error("UPLOAD_ROUTE_ERROR", error);
 
         return NextResponse.json(

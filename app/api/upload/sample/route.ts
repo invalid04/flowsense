@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { processCsvText } from "@/lib/processUploadCsv";
+import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 const SAMPLE_CSV = `session_id,state,timestamp
 s1,/landing,2026-04-01T09:00:00Z
@@ -24,13 +25,18 @@ s5,/dashboard,2026-04-01T13:10:00Z`;
 
 export async function POST() {
   try {
-    const summary = await processCsvText(SAMPLE_CSV);
+    const account = await getOrCreateAccount();
+    const summary = await processCsvText(SAMPLE_CSV, account.id);
 
     return NextResponse.json({
       message: "Sample dataset loaded",
       ...summary,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     console.error("SAMPLE_UPLOAD_ROUTE_ERROR", error);
     const message = error instanceof Error ? error.message : "Failed to load sample dataset";
 
