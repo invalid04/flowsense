@@ -387,8 +387,7 @@ export default async function HomePage() {
     : "No events yet";
 
   return (
-    <main className="enterprise-grid min-h-screen px-4 py-8 md:px-8 md:py-10">
-      <div className="mx-auto w-full max-w-[96rem] space-y-6">
+    <div className="w-full space-y-6">
         <section
           className="glass-panel animate-rise overflow-hidden rounded-3xl p-6 md:p-8"
           style={{ animationDelay: "40ms" }}
@@ -547,7 +546,6 @@ export default async function HomePage() {
             <UploadForm />
           </div>
         </section>
-      </div>
-    </main>
+    </div>
   );
 }
