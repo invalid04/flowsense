@@ -3,12 +3,12 @@
 import { useState } from "react";
 
 type PredictionResponse = {
-    currentState: string;
-    prediction: string | null;
-    probability: number | null;
-    totalTransitions?: number;
-    message?: string;
-    error?: string;
+  currentState: string;
+  prediction: string | null;
+  probability: number | null;
+  totalTransitions?: number;
+  message?: string;
+  error?: string;
 };
 
 export function PredictionPanel() {
@@ -21,9 +21,7 @@ export function PredictionPanel() {
     setLoading(true);
     setResult(null);
 
-    const res = await fetch(
-      `/api/predict?currentState=${encodeURIComponent(currentState)}`
-    );
+    const res = await fetch(`/api/predict?currentState=${encodeURIComponent(currentState)}`);
 
     const data = await res.json();
     setResult(data);
@@ -31,55 +29,49 @@ export function PredictionPanel() {
   };
 
   return (
-    <div className="glass-panel flex h-full min-h-[17.5rem] flex-col rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Prediction Engine</h2>
-      <p className="mt-1 min-h-10 text-sm text-slate-500">
-        Query likely next behavior from the current model.
-      </p>
+    <div className="insights-surface rounded-2xl p-5 md:p-6">
+      <h3 className="text-base font-semibold text-slate-100">Predict Next Step</h3>
+      <p className="mt-1 text-sm text-slate-400">Estimate the most likely next state from any point in the journey.</p>
 
       <form onSubmit={handlePredict} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="field flex-1">
-          <span className="field-label">Current State</span>
+          <span className="field-label text-slate-400">Current State</span>
           <input
-            className="enterprise-input"
+            className="insights-input"
             value={currentState}
             onChange={(e) => setCurrentState(e.target.value)}
             placeholder="/home"
           />
         </label>
-        <button className="enterprise-btn w-full sm:w-auto" type="submit" disabled={loading}>
+        <button className="insights-btn w-full sm:w-auto" type="submit" disabled={loading}>
           {loading ? "Predicting..." : "Run Prediction"}
         </button>
       </form>
 
       {result ? (
-        <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4">
+        <div className="mt-4 rounded-2xl border border-slate-700/80 bg-slate-950/55 p-4">
           {"error" in result && result.error ? (
-            <p className="text-sm font-medium text-red-700">{result.error}</p>
+            <p className="text-sm font-medium text-rose-300">{result.error}</p>
           ) : result.prediction ? (
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm text-slate-200">
               <p>
-                <span className="font-semibold">Current:</span> {result.currentState}
+                <span className="font-semibold text-slate-300">Current:</span> {result.currentState}
               </p>
               <p>
-                <span className="font-semibold">Predicted Next:</span> {result.prediction}
+                <span className="font-semibold text-slate-300">Predicted next:</span> {result.prediction}
               </p>
               <p>
-                <span className="font-semibold">Confidence:</span>{" "}
-                <span className="text-[var(--accent)]">
-                  {((result.probability ?? 0) * 100).toFixed(1)}%
-                </span>
+                <span className="font-semibold text-slate-300">Confidence:</span>{" "}
+                <span className="text-cyan-300">{((result.probability ?? 0) * 100).toFixed(1)}%</span>
               </p>
             </div>
           ) : (
-            <p className="text-sm text-slate-600">
-              {result.message ?? "No prediction available."}
-            </p>
+            <p className="text-sm text-slate-300">{result.message ?? "No prediction available."}</p>
           )}
         </div>
       ) : (
-        <div className="mt-4 flex-1 rounded-2xl border border-dashed border-[var(--panel-border)] bg-white/45 p-4 text-sm text-slate-500">
-          Enter a state and run prediction to view likely next step confidence.
+        <div className="mt-4 rounded-2xl border border-dashed border-slate-700/70 bg-slate-950/30 p-4 text-sm text-slate-400">
+          Enter a state and run prediction to inspect likely user movement.
         </div>
       )}
     </div>

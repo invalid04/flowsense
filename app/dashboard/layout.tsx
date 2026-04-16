@@ -1,4 +1,4 @@
-import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardTopNav } from "./DashboardTopNav";
 
 export default function DashboardLayout({
   children,
@@ -6,11 +6,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="enterprise-grid min-h-screen px-4 py-8 md:px-8 md:py-10">
-      <div className="dashboard-shell mx-auto grid w-full max-w-[108rem] grid-cols-1 gap-5">
-        <DashboardSidebar />
-        <section className="min-w-0">{children}</section>
-      </div>
+    <main className="insights-workspace min-h-screen">
+      <DashboardTopNav />
+      <section className="mx-auto w-full max-w-[88rem] px-4 py-8 md:px-8 md:py-10">
+        {children}
+      </section>
     </main>
   );
 }

@@ -12,7 +12,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     href: "/dashboard",
-    label: "Overview",
+    label: "Insights",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -60,12 +60,12 @@ export function DashboardSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="glass-panel h-fit rounded-3xl p-4 md:p-5 lg:sticky lg:top-6">
+    <aside className="insights-surface h-fit rounded-3xl p-4 md:p-5 lg:sticky lg:top-6">
       <div className="mb-4 px-2">
-        <p className="text-xs font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-          Workspace
+        <p className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
+          FlowSense Workspace
         </p>
-        <p className="mt-2 text-lg font-semibold text-slate-900">FlowSense</p>
+        <p className="mt-2 text-lg font-semibold text-slate-100">Insights</p>
       </div>
 
       <nav className="flex flex-col gap-2">
@@ -82,8 +82,8 @@ export function DashboardSidebar() {
               className={[
                 "inline-flex items-center justify-start gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition",
                 isActive
-                  ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
-                  : "border-[var(--panel-border)] bg-white/60 text-slate-700 hover:bg-white hover:text-slate-900",
+                  ? "border-cyan-300/60 bg-cyan-500/15 text-cyan-100"
+                  : "border-slate-700/70 bg-slate-900/50 text-slate-300 hover:border-slate-500 hover:text-slate-100",
               ].join(" ")}
             >
               {item.icon}

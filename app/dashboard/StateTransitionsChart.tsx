@@ -65,62 +65,56 @@ export function StateTransitionsChart() {
   };
 
   return (
-    <div className="glass-panel rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">State Transition Chart</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Compare likely destination states by probability.
-      </p>
+    <div className="insights-surface rounded-2xl p-5 md:p-6">
+      <h3 className="text-base font-semibold text-slate-100">Transition Distribution</h3>
+      <p className="mt-1 text-sm text-slate-400">Support insight cards with raw probability data per destination state.</p>
 
       <form onSubmit={handleLoad} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="field flex-1">
-          <span className="field-label">Current State</span>
+          <span className="field-label text-slate-400">Current State</span>
           <input
-            className="enterprise-input"
+            className="insights-input"
             value={currentState}
             onChange={(e) => setCurrentState(e.target.value)}
             placeholder="/product"
           />
         </label>
-        <button type="submit" className="enterprise-btn" disabled={loading}>
+        <button type="submit" className="insights-btn" disabled={loading}>
           {loading ? "Loading..." : "Load Chart"}
         </button>
       </form>
 
-      {error && <p className="mt-3 mb-4 text-sm text-red-700">{error}</p>}
+      {error && <p className="mb-4 mt-3 text-sm text-rose-300">{error}</p>}
 
-      <div className="mt-5 h-80 w-full rounded-2xl border border-[var(--panel-border)] bg-white/75 p-3">
+      <div className="mt-5 h-80 w-full rounded-2xl border border-slate-700/80 bg-slate-950/55 p-3">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(15, 23, 42, 0.15)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" />
             <XAxis
               dataKey="toState"
-              tick={{ fill: "#334155", fontSize: 12 }}
-              axisLine={{ stroke: "rgba(15, 23, 42, 0.2)" }}
+              tick={{ fill: "#cbd5e1", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148, 163, 184, 0.24)" }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#334155", fontSize: 12 }}
-              axisLine={{ stroke: "rgba(15, 23, 42, 0.2)" }}
+              tick={{ fill: "#cbd5e1", fontSize: 12 }}
+              axisLine={{ stroke: "rgba(148, 163, 184, 0.24)" }}
               tickLine={false}
             />
             <Tooltip
-              cursor={{ fill: "rgba(0, 87, 217, 0.08)" }}
+              cursor={{ fill: "rgba(56, 189, 248, 0.12)" }}
               contentStyle={{
                 borderRadius: "12px",
-                border: "1px solid rgba(15, 23, 42, 0.12)",
-                boxShadow: "0 12px 30px rgba(15, 23, 42, 0.14)",
+                background: "#0f172a",
+                color: "#e2e8f0",
+                border: "1px solid rgba(148, 163, 184, 0.24)",
               }}
               formatter={(value, name) => {
                 if (name === "probability") return [`${value}%`, "Probability"];
                 return [value, "Count"];
               }}
             />
-            <Bar
-              dataKey="probability"
-              fill="#0057d9"
-              radius={[8, 8, 0, 0]}
-              maxBarSize={56}
-            />
+            <Bar dataKey="probability" fill="#38bdf8" radius={[8, 8, 0, 0]} maxBarSize={56} />
           </BarChart>
         </ResponsiveContainer>
       </div>

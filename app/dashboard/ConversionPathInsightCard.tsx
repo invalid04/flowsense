@@ -16,68 +16,86 @@ type ConversionPathInsightCardProps = {
   error: string | null;
 };
 
-const ENDED_REASON_COPY: Record<ConversionEndedReason, string> = {
-  reached_conversion_state: "Ends: conversion",
-  no_outgoing_transitions: "Ends: no outgoing transitions",
-  loop_detected: "Ends: loop detected",
-  max_steps_reached: "Ends: max steps reached",
-};
+function toReadableStateLabel(state: string): string {
+  const segments = state.split("/").filter(Boolean);
+  const leaf = segments.length > 0 ? segments[segments.length - 1] : state;
+  return leaf.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export function ConversionPathInsightCard({
   insight,
   error,
 }: ConversionPathInsightCardProps) {
+  if (error) {
+    return (
+      <article className="insights-feed-card insights-feed-card--success animate-rise p-6 md:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold tracking-[0.04em] text-emerald-200">
+            This is your strongest conversion path
+          </p>
+          <span className="rounded-full border border-emerald-300/40 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
+            Medium Impact
+          </span>
+        </div>
+        <p className="mt-4 text-sm text-rose-300">{error}</p>
+      </article>
+    );
+  }
+
+  if (!insight) {
+    return (
+      <article className="insights-feed-card insights-feed-card--success animate-rise p-6 md:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold tracking-[0.04em] text-emerald-200">
+            This is your strongest conversion path
+          </p>
+          <span className="rounded-full border border-emerald-300/40 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
+            Medium Impact
+          </span>
+        </div>
+        <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-100">
+          No conversion path available yet
+        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-300">
+          Load additional sessions so FlowSense can identify a reliable success journey.
+        </p>
+      </article>
+    );
+  }
+
+  const readablePath = insight.path.map(toReadableStateLabel).join(" -> ");
+  const pathStatusCopy: Record<ConversionEndedReason, string> = {
+    reached_conversion_state: "Most users who convert follow this path",
+    no_outgoing_transitions: "This path performs best, but many users stop before converting",
+    loop_detected: "This path performs best, but users still loop before converting",
+    max_steps_reached: "This path is strongest so far and needs more data to confirm completion",
+  };
+
   return (
-    <div className="glass-panel h-full rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Conversion Path</h2>
-      <p className="mt-1 text-sm text-slate-500">Primary journey signal to conversion.</p>
-
-      {error ? (
-        <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4 text-sm text-red-700">
-          {error}
-        </div>
-      ) : insight ? (
-        <div className="mt-4 space-y-4 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-5">
-          <div className="font-mono text-base leading-relaxed font-semibold text-slate-900 md:text-lg">
-            {insight.path.join(" -> ")}
-          </div>
-
-          <div className="grid gap-2 text-sm sm:grid-cols-2">
-            <p className="rounded-xl bg-slate-50 px-3 py-2">
-              <span className="font-semibold text-slate-700">Start:</span> {insight.startState}
-            </p>
-            <p className="rounded-xl bg-slate-50 px-3 py-2">
-              <span className="font-semibold text-slate-700">
-                {ENDED_REASON_COPY[insight.endedReason]}
-              </span>
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase">
-              Conversion States
-            </span>
-            {insight.conversionStates.map((state) => (
-              <span
-                key={state}
-                className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--accent-strong)]"
-              >
-                {state}
-              </span>
-            ))}
-          </div>
-
-          {insight.endedReason === "reached_conversion_state" ? (
-            <p className="inline-flex w-fit rounded-full bg-[var(--good-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--good)]">
-              Reached a conversion state
-            </p>
-          ) : null}
-        </div>
-      ) : (
-        <div className="mt-4 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4 text-sm text-slate-600">
-          No conversion path insight available yet.
-        </div>
-      )}
-    </div>
+    <article className="insights-feed-card insights-feed-card--success animate-rise p-6 md:p-7">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold tracking-[0.04em] text-emerald-200">
+          This is your strongest conversion path
+        </p>
+        <span className="rounded-full border border-emerald-300/40 bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
+          Medium Impact
+        </span>
+      </div>
+      <p className="mt-3 text-balance text-2xl leading-tight font-bold tracking-tight text-emerald-100 md:text-[2rem]">
+        {readablePath}
+      </p>
+      <p className="mt-2 text-lg font-semibold text-emerald-200">
+        {pathStatusCopy[insight.endedReason]}
+      </p>
+      <p className="mt-4 text-sm leading-6 text-slate-300">
+        Make this journey easier to start and faster to complete. It is the clearest path to conversion in your current data.
+      </p>
+      <div className="mt-5 flex items-center justify-between text-xs text-slate-400">
+        <span>Starts at: {toReadableStateLabel(insight.startState)}</span>
+        <a href="#supporting-data" className="font-semibold text-emerald-200 hover:text-emerald-100">
+          View details
+        </a>
+      </div>
+    </article>
   );
 }

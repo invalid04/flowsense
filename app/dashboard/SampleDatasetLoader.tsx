@@ -59,13 +59,11 @@ export function SampleDatasetLoader() {
 
   if (sampleMode === "1" || sampleMode === "loaded" || message) {
     return (
-      <div className="glass-panel rounded-2xl px-5 py-4">
-        <p className="text-sm font-semibold tracking-[0.12em] text-[var(--muted)] uppercase">
-          Guided Start
-        </p>
-        <p className="mt-2 text-sm text-slate-700">
+      <div className="insights-surface rounded-2xl px-5 py-4">
+        <p className="text-sm font-semibold tracking-[0.12em] text-slate-400 uppercase">Guided Start</p>
+        <p className="mt-2 text-sm text-slate-300">
           {sampleMode === "loaded" && status === "idle"
-            ? "Sample dataset is active. Replace it anytime in Upload Event Data."
+            ? "Sample dataset is active. Replace it anytime from Deep Dive -> Upload Event Data."
             : message}
         </p>
       </div>

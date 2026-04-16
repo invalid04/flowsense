@@ -4,6 +4,8 @@ import { StateTransitionsChart } from "./StateTransitionsChart";
 import { DropoffInsightCard } from "./DropoffInsightCard";
 import { ConversionPathInsightCard } from "./ConversionPathInsightCard";
 import { LoopInsightCard } from "./LoopInsightCard";
+import { TrackForm } from "./TrackForm";
+import { SampleDatasetLoader } from "./SampleDatasetLoader";
 import { db } from "@/db";
 import {
   sessions as sessionsTable,
@@ -42,6 +44,15 @@ type LoopInsight = {
 type LoopInsightResult = {
   topLoop: LoopInsight | null;
   error: string | null;
+};
+
+type DropoffInsight = {
+  stateId: string;
+  stateName: string;
+  incomingCount: number;
+  outgoingCount: number;
+  leadingFromState: string | null;
+  leadingEdgeCount: number;
 };
 
 const MAX_STEPS = 10;
@@ -110,19 +121,46 @@ async function getDropoffInsight(accountId: string) {
     .where(eq(transitionsTable.accountId, accountId))
     .groupBy(transitionsTable.fromStateId);
 
-  const outgoingMap = new Map<string, number>();
+  const fromStates = alias(statesTable, "dropoff_from_states");
+  const incomingEdgeRows = await db
+    .select({
+      toStateId: transitionsTable.toStateId,
+      fromStateName: fromStates.name,
+      edgeCount: sql<number>`sum(${transitionsTable.count})`,
+    })
+    .from(transitionsTable)
+    .innerJoin(fromStates, eq(transitionsTable.fromStateId, fromStates.id))
+    .where(eq(transitionsTable.accountId, accountId))
+    .groupBy(transitionsTable.toStateId, fromStates.name)
+    .orderBy(desc(sql<number>`sum(${transitionsTable.count})`));
 
+  const outgoingMap = new Map<string, number>();
   for (const row of outgoingRows) {
     outgoingMap.set(row.stateId, Number(row.outgoingCount));
   }
 
-  const dropoffCandidates = incomingRows
-    .map((row) => ({
-      stateId: row.stateId,
-      stateName: row.stateName,
-      incomingCount: Number(row.incomingCount),
-      outgoingCount: outgoingMap.get(row.stateId) ?? 0,
-    }))
+  const leadingEdgeByStateId = new Map<string, { fromStateName: string; edgeCount: number }>();
+  for (const row of incomingEdgeRows) {
+    if (!leadingEdgeByStateId.has(row.toStateId)) {
+      leadingEdgeByStateId.set(row.toStateId, {
+        fromStateName: row.fromStateName,
+        edgeCount: Number(row.edgeCount),
+      });
+    }
+  }
+
+  const dropoffCandidates: DropoffInsight[] = incomingRows
+    .map((row) => {
+      const leadingEdge = leadingEdgeByStateId.get(row.stateId);
+      return {
+        stateId: row.stateId,
+        stateName: row.stateName,
+        incomingCount: Number(row.incomingCount),
+        outgoingCount: outgoingMap.get(row.stateId) ?? 0,
+        leadingFromState: leadingEdge?.fromStateName ?? null,
+        leadingEdgeCount: leadingEdge?.edgeCount ?? 0,
+      };
+    })
     .filter((row) => row.outgoingCount === 0)
     .sort((a, b) => b.incomingCount - a.incomingCount);
 
@@ -134,9 +172,7 @@ async function getDropoffInsight(accountId: string) {
 
 async function getConversionPathInsight(accountId: string): Promise<ConversionPathResult> {
   const startStateParam = "/home";
-  const conversionStates = new Set(
-    await resolveConversionStatesForAccount({ accountId })
-  );
+  const conversionStates = new Set(await resolveConversionStatesForAccount({ accountId }));
 
   try {
     const startState = await db.query.states.findFirst({
@@ -318,6 +354,12 @@ type DatasetStatus = {
   lastUpdatedAt: Date | string | null;
 };
 
+function toReadableStateLabel(state: string): string {
+  const segments = state.split("/").filter(Boolean);
+  const leaf = segments.length > 0 ? segments[segments.length - 1] : state;
+  return leaf.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 async function getDatasetStatus(accountId: string): Promise<DatasetStatus> {
   const [sessionTotals, rowTotals, lastUpdated] = await Promise.all([
     db
@@ -350,29 +392,33 @@ export default async function HomePage() {
       getConversionPathInsight(account.id),
       getLoopInsight(account.id),
       getDatasetStatus(account.id),
-  ]);
+    ]);
+
   const transitions: Transition[] = data.transitions ?? [];
   const biggestDropoff = dropoffData.biggestDropoff ?? null;
-  const dropoffCandidates = dropoffData.candidates ?? [];
-  const { insight: conversionPathInsight, error: conversionPathError } =
-    conversionPathResult;
+  const { insight: conversionPathInsight, error: conversionPathError } = conversionPathResult;
   const { topLoop, error: loopInsightError } = loopInsightResult;
+
   const totalTransitions = transitions.reduce((sum, item) => sum + item.count, 0);
   const uniqueStates = new Set(
     transitions.flatMap((item) => [item.fromState, item.toState])
   ).size;
-  const topPath = transitions.reduce<Transition | null>((top, current) => {
-    if (!top || current.probability > top.probability) return current;
+
+  const topTransition = transitions.reduce<Transition | null>((top, current) => {
+    if (!top || current.count > top.count) return current;
     return top;
   }, null);
+
   const parsedLastUpdatedAt =
     datasetStatus.lastUpdatedAt instanceof Date
       ? datasetStatus.lastUpdatedAt
       : datasetStatus.lastUpdatedAt
         ? new Date(datasetStatus.lastUpdatedAt)
         : null;
+
   const hasValidLastUpdatedAt =
     parsedLastUpdatedAt !== null && !Number.isNaN(parsedLastUpdatedAt.getTime());
+
   const lastUpdatedLabel = hasValidLastUpdatedAt
     ? new Intl.DateTimeFormat("en-US", {
         month: "short",
@@ -382,166 +428,171 @@ export default async function HomePage() {
       }).format(parsedLastUpdatedAt)
     : "No events yet";
 
+  const dropoffStepLabel = biggestDropoff ? toReadableStateLabel(biggestDropoff.stateName) : null;
+  const loopStatesLabel =
+    topLoop && topLoop.states.length > 1
+      ? `${toReadableStateLabel(topLoop.states[0])} and ${toReadableStateLabel(topLoop.states[1])}`
+      : topLoop
+        ? toReadableStateLabel(topLoop.states[0])
+        : null;
+
+  const priorityActions = [
+    dropoffStepLabel
+      ? `Simplify the ${dropoffStepLabel.toLowerCase()} flow to reduce friction.`
+      : "Review onboarding and checkout steps to keep users moving forward.",
+    loopStatesLabel
+      ? `Clarify the difference between ${loopStatesLabel} so users can decide faster.`
+      : "Strengthen decision cues between related pages to prevent back-and-forth behavior.",
+    conversionPathInsight
+      ? "Promote your strongest conversion journey earlier in onboarding and navigation."
+      : "Collect a little more behavior data to confirm the best conversion path.",
+  ];
+
   return (
-    <div className="w-full space-y-6">
-        <section
-          className="glass-panel animate-rise overflow-hidden rounded-3xl p-6 md:p-8"
-          style={{ animationDelay: "40ms" }}
-        >
-          <div className="mb-7 flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-                ENTERPRISE ANALYTICS
-              </p>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-                FlowSense Intelligence Console
-              </h1>
-              <p className="max-w-2xl text-sm leading-relaxed text-slate-600">
-                Behavioral Prediction Engine
-              </p>
-            </div>
-            <div className="self-start rounded-2xl border border-[var(--panel-border)] bg-white/70 px-4 py-3">
-              <p className="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase">
-                Active Dataset
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-800">
-                Rows: {datasetStatus.rows.toLocaleString()} | Sessions:{" "}
-                {datasetStatus.sessions.toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">Updated {lastUpdatedLabel}</p>
-            </div>
+    <div className="w-full space-y-8">
+      <SampleDatasetLoader />
+
+      <section className="insights-surface animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "40ms" }}>
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FlowSense</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-50 md:text-5xl">Insights</h1>
+            <p className="max-w-2xl text-sm leading-relaxed text-slate-200 md:text-base">
+              Open this page and know what is happening, why it matters, and what to do next.
+            </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="badge-kpi rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                States Mapped
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{uniqueStates}</p>
-            </div>
-            <div className="badge-kpi rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                Transition Volume
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {totalTransitions.toLocaleString()}
-              </p>
-            </div>
-            <div className="badge-kpi rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                Top Predicted Path
-              </p>
-              <p className="mt-2 text-sm font-semibold text-slate-800 md:text-base">
-                {topPath
-                  ? `${topPath.fromState} -> ${topPath.toState} (${(
-                      topPath.probability * 100
-                    ).toFixed(1)}%)`
-                  : "No transitions yet"}
-              </p>
-            </div>
-            <div className="badge-kpi rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                Active Sessions
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {datasetStatus.sessions.toLocaleString()}
-              </p>
-            </div>
+          <div className="rounded-2xl border border-slate-700/80 bg-slate-950/45 px-4 py-3">
+            <p className="text-xs font-semibold tracking-[0.12em] text-slate-300 uppercase">Active Dataset</p>
+            <p className="mt-1 text-sm font-semibold text-slate-100">
+              Rows: {datasetStatus.rows.toLocaleString()} | Sessions: {datasetStatus.sessions.toLocaleString()}
+            </p>
+            <p className="mt-1 text-xs text-slate-300">Updated {lastUpdatedLabel}</p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="grid gap-4">
-          <div className="animate-rise" style={{ animationDelay: "120ms" }}>
-            <ConversionPathInsightCard
-              insight={conversionPathInsight}
-              error={conversionPathError}
-            />
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 1</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Insights Feed</h2>
           </div>
-        </section>
+        </div>
 
-        <section className="grid gap-4 xl:grid-cols-3">
-          <div className="animate-rise" style={{ animationDelay: "200ms" }}>
-            <PredictionPanel />
-          </div>
-          <div className="animate-rise" style={{ animationDelay: "220ms" }}>
-            <DropoffInsightCard
-              biggestDropoff={biggestDropoff}
-              candidateCount={dropoffCandidates.length}
-            />
-          </div>
-          <div className="animate-rise" style={{ animationDelay: "240ms" }}>
-            <LoopInsightCard topLoop={topLoop} error={loopInsightError} />
-          </div>
-        </section>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <DropoffInsightCard biggestDropoff={biggestDropoff} totalTransitions={totalTransitions} />
+          <LoopInsightCard topLoop={topLoop} error={loopInsightError} totalTransitions={totalTransitions} />
+          <ConversionPathInsightCard insight={conversionPathInsight} error={conversionPathError} />
 
-        <section className="space-y-4">
-          <div className="animate-rise" style={{ animationDelay: "260ms" }}>
+          <article className="insights-feed-card animate-rise p-6 md:p-7 md:col-span-2 xl:col-span-3" style={{ animationDelay: "120ms" }}>
+            <p className="text-xs font-semibold tracking-[0.14em] text-cyan-300 uppercase">What To Do Next</p>
+            <p className="mt-3 text-2xl leading-tight font-bold tracking-tight text-cyan-100 md:text-[2rem]">
+              Recommended actions
+            </p>
+            <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-300">
+              {priorityActions.map((action) => (
+                <li key={action}>- {action}</li>
+              ))}
+            </ul>
+            <div className="mt-5 border-t border-slate-600 pt-4 text-xs text-slate-300">
+              States mapped: {uniqueStates.toLocaleString()} | Transitions: {totalTransitions.toLocaleString()}
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="supporting-data" className="mt-14 space-y-4 opacity-80">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Section 2</p>
+          <h2 className="text-xl font-medium tracking-tight text-slate-300">Supporting Data</h2>
+          <p className="mt-1 text-sm text-slate-400">Raw data below supports the insight conclusions above.</p>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="animate-rise" style={{ animationDelay: "180ms" }}>
             <StateTransitionsChart />
           </div>
-          <div
-            className="glass-panel animate-rise overflow-hidden rounded-3xl"
-            style={{ animationDelay: "280ms" }}
-          >
-            <div className="border-b border-[var(--panel-border)] px-5 py-4 md:px-6">
-              <h2 className="text-lg font-semibold text-slate-900">
-                Transition Registry
-              </h2>
-              <p className="text-sm text-slate-500">
-                Latest calculated edges from your loaded sessions
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-[var(--panel-border)] bg-slate-50/70">
-                    <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
-                      From State
-                    </th>
-                    <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
-                      To State
-                    </th>
-                    <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
-                      Count
-                    </th>
-                    <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
-                      Probability
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transitions.length > 0 ? (
-                    transitions.map((transition, index) => (
-                      <tr
-                        key={`${transition.fromState}-${transition.toState}-${index}`}
-                        className="border-b border-[var(--panel-border)]/70 last:border-b-0"
-                      >
-                        <td className="px-5 py-3 font-mono text-sm md:px-6">
-                          {transition.fromState}
-                        </td>
-                        <td className="px-5 py-3 font-mono text-sm md:px-6">
-                          {transition.toState}
-                        </td>
-                        <td className="px-5 py-3 md:px-6">{transition.count}</td>
-                        <td className="px-5 py-3 font-semibold text-[var(--accent)] md:px-6">
-                          {(transition.probability * 100).toFixed(1)}%
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td className="px-5 py-8 text-sm text-slate-500 md:px-6" colSpan={4}>
-                        No transition data yet.
+          <div className="insights-surface animate-rise rounded-2xl p-5 md:p-6" style={{ animationDelay: "210ms" }}>
+            <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Model Snapshot</p>
+            <p className="mt-3 text-sm text-slate-300">
+              {topTransition
+                ? `Highest-volume edge: ${topTransition.fromState} -> ${topTransition.toState} (${topTransition.count.toLocaleString()} transitions)`
+                : "No transitions loaded yet."}
+            </p>
+            <p className="mt-2 text-sm text-slate-300">Unique states: {uniqueStates.toLocaleString()}</p>
+            <p className="mt-2 text-sm text-slate-300">Total transitions: {totalTransitions.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="insights-surface animate-rise overflow-hidden rounded-2xl" style={{ animationDelay: "240ms" }}>
+          <div className="border-b border-slate-700/80 px-5 py-4 md:px-6">
+            <h3 className="text-sm font-semibold text-slate-300">Transition Table</h3>
+            <p className="text-sm text-slate-400">Detailed edges powering your current insight feed.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-slate-700/80 bg-slate-950/35">
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">From State</th>
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">To State</th>
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">Count</th>
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">Probability</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transitions.length > 0 ? (
+                  transitions.map((transition, index) => (
+                    <tr
+                      key={`${transition.fromState}-${transition.toState}-${index}`}
+                      className="border-b border-slate-800/70 text-slate-200 last:border-b-0"
+                    >
+                      <td className="px-5 py-3 font-mono text-sm md:px-6">{transition.fromState}</td>
+                      <td className="px-5 py-3 font-mono text-sm md:px-6">{transition.toState}</td>
+                      <td className="px-5 py-3 md:px-6">{transition.count}</td>
+                      <td className="px-5 py-3 font-semibold text-cyan-300 md:px-6">
+                        {(transition.probability * 100).toFixed(1)}%
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-5 py-8 text-sm text-slate-300 md:px-6" colSpan={4}>
+                      No transition data yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <div className="animate-rise" style={{ animationDelay: "320ms" }}>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 3</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Deep Dive</h2>
+          <p className="mt-1 text-sm text-slate-200">Optional controls for advanced analysis and data operations.</p>
+        </div>
+
+        <details className="insights-surface rounded-2xl p-5 md:p-6">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200">
+            Expand advanced tools
+          </summary>
+          <p className="mt-2 text-sm text-slate-200">
+            Use these tools when you need to validate a hypothesis or refresh model data.
+          </p>
+
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            <PredictionPanel />
             <UploadForm />
           </div>
-        </section>
+          <div className="mt-4">
+            <TrackForm />
+          </div>
+        </details>
+      </section>
     </div>
   );
 }
+

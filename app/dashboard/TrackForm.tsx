@@ -28,22 +28,17 @@ export function TrackForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="glass-panel flex h-full flex-col space-y-4 rounded-3xl p-5 md:p-6"
-    >
+    <form onSubmit={handleSubmit} className="insights-surface flex h-full flex-col space-y-4 rounded-2xl p-5 md:p-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">Track Transition Event</h2>
-        <p className="text-sm text-slate-500">
-          Append a new state jump to your active sequence.
-        </p>
+        <h3 className="text-base font-semibold text-slate-100">Track Transition Event</h3>
+        <p className="text-sm text-slate-400">Append a new state jump to your active sequence.</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
         <label className="field">
-          <span className="field-label">Session Key</span>
+          <span className="field-label text-slate-400">Session Key</span>
           <input
-            className="enterprise-input"
+            className="insights-input"
             value={sessionKey}
             onChange={(e) => setSessionKey(e.target.value)}
             placeholder="session-1"
@@ -51,9 +46,9 @@ export function TrackForm() {
         </label>
 
         <label className="field">
-          <span className="field-label">From State</span>
+          <span className="field-label text-slate-400">From State</span>
           <input
-            className="enterprise-input"
+            className="insights-input"
             value={fromState}
             onChange={(e) => setFromState(e.target.value)}
             placeholder="/home"
@@ -61,9 +56,9 @@ export function TrackForm() {
         </label>
 
         <label className="field">
-          <span className="field-label">To State</span>
+          <span className="field-label text-slate-400">To State</span>
           <input
-            className="enterprise-input"
+            className="insights-input"
             value={toState}
             onChange={(e) => setToState(e.target.value)}
             placeholder="/dashboard"
@@ -71,11 +66,7 @@ export function TrackForm() {
         </label>
       </div>
 
-      <button
-        type="submit"
-        className="enterprise-btn mt-auto w-full md:w-auto"
-        disabled={loading}
-      >
+      <button type="submit" className="insights-btn mt-auto w-full md:w-auto" disabled={loading}>
         {loading ? "Tracking..." : "Commit Transition"}
       </button>
     </form>

@@ -3,51 +3,81 @@ type DropoffCandidate = {
   stateName: string;
   incomingCount: number;
   outgoingCount: number;
+  leadingFromState: string | null;
+  leadingEdgeCount: number;
 };
 
 type DropoffInsightCardProps = {
   biggestDropoff: DropoffCandidate | null;
-  candidateCount: number;
+  totalTransitions: number;
 };
+
+function toReadableStateLabel(state: string): string {
+  const segments = state.split("/").filter(Boolean);
+  const leaf = segments.length > 0 ? segments[segments.length - 1] : state;
+
+  return leaf.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export function DropoffInsightCard({
   biggestDropoff,
-  candidateCount,
+  totalTransitions,
 }: DropoffInsightCardProps) {
-  return (
-    <div className="glass-panel flex h-full min-h-[17.5rem] flex-col rounded-3xl p-5 md:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">Drop-Off</h2>
-      <p className="mt-1 min-h-10 text-sm text-slate-500">
-        Where users enter but do not continue.
-      </p>
+  if (!biggestDropoff) {
+    return (
+      <article className="insights-feed-card insights-feed-card--dropoff animate-rise p-6 md:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold tracking-[0.04em] text-orange-200">
+            Users are dropping off here
+          </p>
+          <span className="rounded-full border border-orange-300/40 bg-orange-500/20 px-2 py-0.5 text-[11px] font-semibold text-orange-100">
+            High Impact
+          </span>
+        </div>
+        <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-100">
+          No major exit point detected yet
+        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-300">
+          More event data is needed before FlowSense can isolate a high-friction handoff.
+        </p>
+      </article>
+    );
+  }
 
-      {biggestDropoff ? (
-        <div className="mt-4 flex-1 space-y-3 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4">
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
-            Terminal State
-          </p>
-          <p className="font-mono text-xl font-bold text-slate-900">
-            {biggestDropoff.stateName}
-          </p>
-          <div className="grid gap-2 text-sm sm:grid-cols-2">
-            <p className="rounded-xl bg-slate-50 px-3 py-2">
-              <span className="font-semibold text-slate-700">Incoming:</span>{" "}
-              {biggestDropoff.incomingCount.toLocaleString()}
-            </p>
-            <p className="rounded-xl bg-slate-50 px-3 py-2">
-              <span className="font-semibold text-slate-700">Outgoing:</span>{" "}
-              {biggestDropoff.outgoingCount.toLocaleString()}
-            </p>
-          </div>
-          <p className="text-xs text-slate-500">
-            Total drop-off candidates: {candidateCount.toLocaleString()}
-          </p>
-        </div>
-      ) : (
-        <div className="mt-4 flex-1 rounded-2xl border border-[var(--panel-border)] bg-white/70 p-4 text-sm text-slate-600">
-          No drop-off states detected yet.
-        </div>
-      )}
-    </div>
+  const fromLabel = biggestDropoff.leadingFromState
+    ? toReadableStateLabel(biggestDropoff.leadingFromState)
+    : null;
+  const toLabel = toReadableStateLabel(biggestDropoff.stateName);
+  const transitionLabel = fromLabel ? `${fromLabel} -> ${toLabel}` : toLabel;
+
+  const shareOfModel =
+    totalTransitions > 0 ? (biggestDropoff.incomingCount / totalTransitions) * 100 : 0;
+
+  return (
+    <article className="insights-feed-card insights-feed-card--dropoff animate-rise p-6 md:p-7">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold tracking-[0.04em] text-orange-200">
+          Users are dropping off here
+        </p>
+        <span className="rounded-full border border-orange-300/40 bg-orange-500/20 px-2 py-0.5 text-[11px] font-semibold text-orange-100">
+          High Impact
+        </span>
+      </div>
+      <p className="mt-3 text-balance text-2xl leading-tight font-bold tracking-tight text-orange-100 md:text-[2rem]">
+        {transitionLabel}
+      </p>
+      <p className="mt-2 text-lg font-semibold text-orange-200">
+        {shareOfModel.toFixed(1)}% of users drop off here
+      </p>
+      <p className="mt-4 text-sm leading-6 text-slate-300">
+        Users are leaving at this step. This usually points to checkout friction, unclear fields, or trust concerns.
+      </p>
+      <div className="mt-5 flex items-center justify-between text-xs text-slate-400">
+        <span>Affected users: {biggestDropoff.incomingCount.toLocaleString()}</span>
+        <a href="#supporting-data" className="font-semibold text-orange-200 hover:text-orange-100">
+          View details
+        </a>
+      </div>
+    </article>
   );
 }
