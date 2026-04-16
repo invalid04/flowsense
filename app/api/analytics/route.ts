@@ -3,9 +3,11 @@ import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
+import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 export async function GET() {
     try {
+        const account = await getOrCreateAccount();
         const fromStates = alias(states, "from_states");
         const toStates = alias(states, "to_states");
 
@@ -18,6 +20,7 @@ export async function GET() {
             .from(transitions)
             .innerJoin(fromStates, eq(transitions.fromStateId, fromStates.id))
             .innerJoin(toStates, eq(transitions.toStateId, toStates.id))
+            .where(eq(transitions.accountId, account.id))
             .groupBy(fromStates.name, toStates.name)
 
         const totalsByFromState = new Map<string, number>();
@@ -46,6 +49,13 @@ export async function GET() {
             transitions: analytics,
         });
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         console.error("ANALYTICS_ROUTE_ERROR", error);
 
         return NextResponse.json(

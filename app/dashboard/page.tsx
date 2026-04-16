@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { PredictionPanel } from "./PredictionPanel";
 import { UploadForm } from "./UploadForm";
 import { StateTransitionsChart } from "./StateTransitionsChart";
@@ -6,40 +5,14 @@ import { DropoffInsightCard } from "./DropoffInsightCard";
 import { ConversionPathInsightCard } from "./ConversionPathInsightCard";
 import { LoopInsightCard } from "./LoopInsightCard";
 import { db } from "@/db";
-import { sessions as sessionsTable, transitions as transitionsTable } from "@/db/schema";
-import { sql } from "drizzle-orm";
-
-async function getAnalytics() {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-
-  const res = await fetch(`${protocol}://${host}/api/analytics`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch analytics");
-  }
-
-  return res.json();
-}
-
-async function getDropoffInsight() {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-
-  const res = await fetch(`${protocol}://${host}/api/insights/dropoff`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch dropoff insight");
-  }
-
-  return res.json();
-}
+import {
+  sessions as sessionsTable,
+  states as statesTable,
+  transitions as transitionsTable,
+} from "@/db/schema";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+import { getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 type ConversionEndedReason =
   | "reached_conversion_state"
@@ -70,43 +43,177 @@ type LoopInsightResult = {
   error: string | null;
 };
 
-async function getConversionPathInsight(): Promise<ConversionPathResult> {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+const DEFAULT_CONVERSION_STATES = [
+  "/confirmation",
+  "/checkout",
+  "/signup",
+  "/contact-sales",
+];
+
+const MAX_STEPS = 10;
+
+async function getAnalytics(accountId: string): Promise<{ transitions: Transition[] }> {
+  const fromStates = alias(statesTable, "from_states");
+  const toStates = alias(statesTable, "to_states");
+
+  const rows = await db
+    .select({
+      fromState: fromStates.name,
+      toState: toStates.name,
+      count: sql<number>`sum(${transitionsTable.count})`,
+    })
+    .from(transitionsTable)
+    .innerJoin(fromStates, eq(transitionsTable.fromStateId, fromStates.id))
+    .innerJoin(toStates, eq(transitionsTable.toStateId, toStates.id))
+    .where(eq(transitionsTable.accountId, accountId))
+    .groupBy(fromStates.name, toStates.name);
+
+  const totalsByFromState = new Map<string, number>();
+
+  for (const row of rows) {
+    totalsByFromState.set(
+      row.fromState,
+      (totalsByFromState.get(row.fromState) ?? 0) + Number(row.count)
+    );
+  }
+
+  const analytics = rows.map((row) => {
+    const count = Number(row.count);
+    const totalFromThisState = totalsByFromState.get(row.fromState) ?? 0;
+    const probability = totalFromThisState > 0 ? count / totalFromThisState : 0;
+
+    return {
+      fromState: row.fromState,
+      toState: row.toState,
+      count,
+      probability,
+    };
+  });
+
+  return {
+    transitions: analytics,
+  };
+}
+
+async function getDropoffInsight(accountId: string) {
+  const incomingRows = await db
+    .select({
+      stateId: transitionsTable.toStateId,
+      stateName: statesTable.name,
+      incomingCount: sql<number>`sum(${transitionsTable.count})`,
+    })
+    .from(transitionsTable)
+    .innerJoin(statesTable, eq(transitionsTable.toStateId, statesTable.id))
+    .where(eq(transitionsTable.accountId, accountId))
+    .groupBy(transitionsTable.toStateId, statesTable.name);
+
+  const outgoingRows = await db
+    .select({
+      stateId: transitionsTable.fromStateId,
+      outgoingCount: sql<number>`sum(${transitionsTable.count})`,
+    })
+    .from(transitionsTable)
+    .where(eq(transitionsTable.accountId, accountId))
+    .groupBy(transitionsTable.fromStateId);
+
+  const outgoingMap = new Map<string, number>();
+
+  for (const row of outgoingRows) {
+    outgoingMap.set(row.stateId, Number(row.outgoingCount));
+  }
+
+  const dropoffCandidates = incomingRows
+    .map((row) => ({
+      stateId: row.stateId,
+      stateName: row.stateName,
+      incomingCount: Number(row.incomingCount),
+      outgoingCount: outgoingMap.get(row.stateId) ?? 0,
+    }))
+    .filter((row) => row.outgoingCount === 0)
+    .sort((a, b) => b.incomingCount - a.incomingCount);
+
+  return {
+    biggestDropoff: dropoffCandidates[0] ?? null,
+    candidates: dropoffCandidates,
+  };
+}
+
+async function getConversionPathInsight(accountId: string): Promise<ConversionPathResult> {
+  const startStateParam = "/home";
+  const conversionStates = new Set(DEFAULT_CONVERSION_STATES);
 
   try {
-    const res = await fetch(`${protocol}://${host}/api/insights/conversion-path`, {
-      cache: "no-store",
+    const startState = await db.query.states.findFirst({
+      where: eq(statesTable.name, startStateParam),
     });
 
-    const data = (await res.json()) as Partial<ConversionPathInsight> & { error?: string };
-
-    if (!res.ok) {
+    if (!startState) {
       return {
         insight: null,
-        error: data.error ?? "Failed to fetch conversion path insight",
+        error: "Start state not found",
       };
     }
 
-    if (
-      !data.startState ||
-      !Array.isArray(data.conversionStates) ||
-      !Array.isArray(data.path) ||
-      !data.endedReason
-    ) {
-      return {
-        insight: null,
-        error: "Invalid conversion path insight payload",
-      };
+    const path = [startState.name];
+    const visited = new Set<string>([startState.name]);
+    let currentStateId = startState.id;
+    let currentStateName = startState.name;
+    let endedReason: ConversionEndedReason = "max_steps_reached";
+
+    for (let step = 0; step < MAX_STEPS; step++) {
+      if (step > 0 && conversionStates.has(currentStateName)) {
+        endedReason = "reached_conversion_state";
+        break;
+      }
+
+      const outgoingRows = await db
+        .select({
+          toStateId: transitionsTable.toStateId,
+          toStateName: statesTable.name,
+          count: sql<number>`sum(${transitionsTable.count})`,
+        })
+        .from(transitionsTable)
+        .innerJoin(statesTable, eq(transitionsTable.toStateId, statesTable.id))
+        .where(
+          and(
+            eq(transitionsTable.fromStateId, currentStateId),
+            eq(transitionsTable.accountId, accountId)
+          )
+        )
+        .groupBy(transitionsTable.toStateId, statesTable.name)
+        .orderBy(desc(sql<number>`sum(${transitionsTable.count})`));
+
+      if (outgoingRows.length === 0) {
+        endedReason = "no_outgoing_transitions";
+        break;
+      }
+
+      const next = outgoingRows[0];
+      const nextStateName = next.toStateName;
+      const nextStateId = next.toStateId;
+
+      if (visited.has(nextStateName)) {
+        endedReason = "loop_detected";
+        break;
+      }
+
+      path.push(nextStateName);
+      visited.add(nextStateName);
+      currentStateId = nextStateId;
+      currentStateName = nextStateName;
+
+      if (conversionStates.has(currentStateName)) {
+        endedReason = "reached_conversion_state";
+        break;
+      }
     }
 
     return {
       insight: {
-        startState: data.startState,
-        conversionStates: data.conversionStates,
-        path: data.path,
-        endedReason: data.endedReason,
+        startState: startState.name,
+        conversionStates: Array.from(conversionStates),
+        path,
+        endedReason,
       },
       error: null,
     };
@@ -118,51 +225,80 @@ async function getConversionPathInsight(): Promise<ConversionPathResult> {
   }
 }
 
-async function getLoopInsight(): Promise<LoopInsightResult> {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-
+async function getLoopInsight(accountId: string): Promise<LoopInsightResult> {
   try {
-    const res = await fetch(`${protocol}://${host}/api/insights/loops`, {
-      cache: "no-store",
-    });
+    const allStates = await db.select().from(statesTable);
+    const stateNameById = new Map<string, string>();
 
-    const data = (await res.json()) as Partial<{ topLoop: LoopInsight }> & {
-      error?: string;
-    };
-
-    if (!res.ok) {
-      return {
-        topLoop: null,
-        error: data.error ?? "Failed to fetch loop insight",
-      };
+    for (const state of allStates) {
+      stateNameById.set(state.id, state.name);
     }
 
-    if (!data.topLoop) {
-      return {
-        topLoop: null,
-        error: null,
-      };
+    const allTransitions = await db
+      .select()
+      .from(transitionsTable)
+      .where(eq(transitionsTable.accountId, accountId));
+
+    const transitionCountMap = new Map<string, number>();
+
+    for (const transition of allTransitions) {
+      const key = `${transition.fromStateId}->${transition.toStateId}`;
+      transitionCountMap.set(key, Number(transition.count));
     }
 
-    if (
-      !data.topLoop.type ||
-      !Array.isArray(data.topLoop.states) ||
-      typeof data.topLoop.totalCount !== "number"
-    ) {
-      return {
-        topLoop: null,
-        error: "Invalid loop insight payload",
-      };
+    const loops: LoopInsight[] = [];
+    const visitedPairs = new Set<string>();
+
+    for (const transition of allTransitions) {
+      const fromId = transition.fromStateId;
+      const toId = transition.toStateId;
+
+      if (fromId === toId) {
+        const stateName = stateNameById.get(fromId);
+        if (!stateName) continue;
+
+        loops.push({
+          type: "self",
+          states: [stateName],
+          totalCount: Number(transition.count),
+        });
+        continue;
+      }
+
+      const forwardKey = `${fromId}->${toId}`;
+      const reverseKey = `${toId}->${fromId}`;
+
+      if (!transitionCountMap.has(reverseKey)) {
+        continue;
+      }
+
+      const pairKey = [fromId, toId].sort().join("<->");
+      if (visitedPairs.has(pairKey)) {
+        continue;
+      }
+      visitedPairs.add(pairKey);
+
+      const fromStateName = stateNameById.get(fromId);
+      const toStateName = stateNameById.get(toId);
+
+      if (!fromStateName || !toStateName) {
+        continue;
+      }
+
+      const forwardCount = transitionCountMap.get(forwardKey) ?? 0;
+      const reverseCount = transitionCountMap.get(reverseKey) ?? 0;
+
+      loops.push({
+        type: "two-state",
+        states: [fromStateName, toStateName],
+        totalCount: forwardCount + reverseCount,
+      });
     }
+
+    loops.sort((a, b) => b.totalCount - a.totalCount);
 
     return {
-      topLoop: {
-        type: data.topLoop.type,
-        states: data.topLoop.states,
-        totalCount: data.topLoop.totalCount,
-      },
+      topLoop: loops[0] ?? null,
       error: null,
     };
   } catch {
@@ -186,13 +322,20 @@ type DatasetStatus = {
   lastUpdatedAt: Date | string | null;
 };
 
-async function getDatasetStatus(): Promise<DatasetStatus> {
+async function getDatasetStatus(accountId: string): Promise<DatasetStatus> {
   const [sessionTotals, rowTotals, lastUpdated] = await Promise.all([
-    db.select({ value: sql<number>`count(*)` }).from(sessionsTable),
-    db.select({ value: sql<number>`count(*)` }).from(transitionsTable),
-    db.select({ value: sql<Date | null>`max(${transitionsTable.createdAt})` }).from(
-      transitionsTable
-    ),
+    db
+      .select({ value: sql<number>`count(*)` })
+      .from(sessionsTable)
+      .where(eq(sessionsTable.accountId, accountId)),
+    db
+      .select({ value: sql<number>`count(*)` })
+      .from(transitionsTable)
+      .where(eq(transitionsTable.accountId, accountId)),
+    db
+      .select({ value: sql<Date | null>`max(${transitionsTable.createdAt})` })
+      .from(transitionsTable)
+      .where(eq(transitionsTable.accountId, accountId)),
   ]);
 
   return {
@@ -203,13 +346,14 @@ async function getDatasetStatus(): Promise<DatasetStatus> {
 }
 
 export default async function HomePage() {
+  const account = await getOrCreateAccount();
   const [data, dropoffData, conversionPathResult, loopInsightResult, datasetStatus] =
     await Promise.all([
-    getAnalytics(),
-    getDropoffInsight(),
-    getConversionPathInsight(),
-    getLoopInsight(),
-    getDatasetStatus(),
+      getAnalytics(account.id),
+      getDropoffInsight(account.id),
+      getConversionPathInsight(account.id),
+      getLoopInsight(account.id),
+      getDatasetStatus(account.id),
   ]);
   const transitions: Transition[] = data.transitions ?? [];
   const biggestDropoff = dropoffData.biggestDropoff ?? null;

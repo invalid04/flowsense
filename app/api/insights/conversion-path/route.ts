@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
+import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 const DEFAULT_CONVERSION_STATES = [
   "/confirmation",
@@ -14,6 +15,7 @@ const MAX_STEPS = 10;
 
 export async function GET(req: NextRequest) {
   try {
+    const account = await getOrCreateAccount();
     const { searchParams } = new URL(req.url);
     const startStateParam = searchParams.get("startState") ?? "/home";
 
@@ -63,7 +65,12 @@ export async function GET(req: NextRequest) {
         })
         .from(transitions)
         .innerJoin(states, eq(transitions.toStateId, states.id))
-        .where(eq(transitions.fromStateId, currentStateId))
+        .where(
+          and(
+            eq(transitions.fromStateId, currentStateId),
+            eq(transitions.accountId, account.id)
+          )
+        )
         .groupBy(transitions.toStateId, states.name)
         .orderBy(desc(sql<number>`sum(${transitions.count})`));
 
@@ -99,6 +106,13 @@ export async function GET(req: NextRequest) {
       endedReason,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     console.error("CONVERSION_PATH_INSIGHT_ERROR", error);
 
     return NextResponse.json(

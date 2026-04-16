@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
+import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 export async function GET() {
   try {
+    const account = await getOrCreateAccount();
     const allStates = await db.select().from(states);
 
     const stateNameById = new Map<string, string>();
@@ -11,7 +14,10 @@ export async function GET() {
       stateNameById.set(state.id, state.name);
     }
 
-    const allTransitions = await db.select().from(transitions);
+    const allTransitions = await db
+      .select()
+      .from(transitions)
+      .where(eq(transitions.accountId, account.id));
 
     const transitionCountMap = new Map<string, number>();
 
@@ -87,6 +93,13 @@ export async function GET() {
       loops,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     console.error("LOOP_INSIGHT_ERROR", error);
 
     return NextResponse.json(

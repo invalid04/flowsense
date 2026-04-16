@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq,sql, desc } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
+import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 export async function GET(req: NextRequest) {
     try {
+        const account = await getOrCreateAccount();
         const { searchParams } = new URL(req.url);
         const currentState = searchParams.get("currentState");
 
@@ -33,7 +35,12 @@ export async function GET(req: NextRequest) {
             })
             .from(transitions)
             .innerJoin(states, eq(transitions.toStateId, states.id))
-            .where(eq(transitions.fromStateId, current.id))
+            .where(
+                and(
+                    eq(transitions.fromStateId, current.id),
+                    eq(transitions.accountId, account.id)
+                )
+            )
             .groupBy(states.name)
             .orderBy(desc(sql<number>`sum(${transitions.count})`));
 
@@ -53,6 +60,13 @@ export async function GET(req: NextRequest) {
             transition: data,
         });
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         console.error("STATE_TRANSITIONS_ROUTE_ERROR", error);
 
         return NextResponse.json(

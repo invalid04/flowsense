@@ -48,3 +48,13 @@ export const transitions = pgTable("transitions", {
     count: integer("count").default(1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const apiKeys = pgTable("api_keys", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    key: text("key").notNull().unique(),
+    label: text("label").notNull().default("Default Key"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  });

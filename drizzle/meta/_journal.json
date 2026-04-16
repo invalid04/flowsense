@@ -22,6 +22,13 @@
       "when": 1775985968448,
       "tag": "0002_harsh_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776317861585,
+      "tag": "0003_late_glorian",
+      "breakpoints": true
     }
   ]
 }
