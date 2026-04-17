@@ -8,6 +8,7 @@ const navItems = [
   { href: "/dashboard", label: "Insights" },
   { href: "/dashboard/flows", label: "Flows" },
   { href: "/dashboard/events", label: "Events" },
+  { href: "/dashboard/api-keys", label: "API" },
 ];
 
 export function DashboardTopNav() {

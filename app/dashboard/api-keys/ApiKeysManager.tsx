@@ -249,9 +249,9 @@ export function ApiKeysManager() {
 
   return (
     <div className="space-y-4">
-      <section className="glass-panel animate-rise rounded-3xl p-5 md:p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Generate API Key</h2>
-        <p className="mt-1 text-sm text-slate-500">
+      <section className="insights-surface animate-rise rounded-3xl p-5 md:p-6">
+        <h2 className="text-lg font-semibold text-slate-100">Generate API Key</h2>
+        <p className="mt-1 text-sm text-slate-300">
           Create scoped keys for server-to-server event ingestion.
         </p>
 
@@ -259,72 +259,72 @@ export function ApiKeysManager() {
           onSubmit={createKey}
           className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
         >
-          <label className="field">
-            <span className="field-label">Key Label</span>
+          <label className="flex flex-col gap-2">
+            <span className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Key Label</span>
             <input
-              className="enterprise-input"
+              className="insights-input"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="Production key"
             />
           </label>
-          <button className="enterprise-btn w-full sm:w-auto" type="submit" disabled={isCreating}>
+          <button className="insights-btn w-full sm:w-auto" type="submit" disabled={isCreating}>
             {isCreating ? "Generating..." : "Generate Key"}
           </button>
         </form>
       </section>
 
       {lastCreatedKey && (
-        <section className="glass-panel animate-rise rounded-3xl border border-[var(--accent)]/20 bg-[var(--accent-soft)]/35 p-5 md:p-6">
-          <h3 className="text-base font-semibold text-slate-900">API key created successfully</h3>
-          <p className="mt-1 text-sm text-slate-600">
+        <section className="insights-surface animate-rise rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-5 md:p-6">
+          <h3 className="text-base font-semibold text-slate-100">API key created successfully</h3>
+          <p className="mt-1 text-sm text-slate-300">
             Store this securely. This full key will not be shown again.
           </p>
-          <div className="mt-3 rounded-xl border border-[var(--panel-border)] bg-white px-4 py-3 font-mono text-sm text-slate-800">
+          <div className="mt-3 rounded-xl border border-slate-600/80 bg-black/45 px-4 py-3 font-mono text-sm text-slate-100">
             {lastCreatedKey.key}
           </div>
           <button
             type="button"
             onClick={() => copyValue(lastCreatedKey.key, "created-key")}
-            className="mt-3 rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="mt-3 rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
           >
             {copiedToken === "created-key" ? "Copied" : "Copy key"}
           </button>
         </section>
       )}
 
-      <section className="glass-panel animate-rise overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
-        <div className="border-b border-[var(--panel-border)] px-5 py-4 md:px-6">
-          <h3 className="text-lg font-semibold text-slate-900">API Key Registry</h3>
-          <p className="text-sm text-slate-500">
+      <section className="insights-surface animate-rise overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
+        <div className="border-b border-slate-700/80 px-5 py-4 md:px-6">
+          <h3 className="text-lg font-semibold text-slate-100">API Key Registry</h3>
+          <p className="text-sm text-slate-300">
             Manage credentials used by your integrations.
           </p>
         </div>
 
         {isLoading ? (
-          <p className="px-5 py-6 text-sm text-slate-500 md:px-6">Loading API keys...</p>
+          <p className="px-5 py-6 text-sm text-slate-300 md:px-6">Loading API keys...</p>
         ) : keys.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-slate-500 md:px-6">
+          <p className="px-5 py-6 text-sm text-slate-300 md:px-6">
             No API keys yet. Generate your first key above.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-[var(--panel-border)] bg-slate-50/70">
-                  <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
+                <tr className="border-b border-slate-700/80 bg-slate-950/35">
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">
                     Label
                   </th>
-                  <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">
                     Key
                   </th>
-                  <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">
                     Status
                   </th>
-                  <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">
                     Created
                   </th>
-                  <th className="px-5 py-3 text-xs tracking-wide text-slate-600 uppercase md:px-6">
+                  <th className="px-5 py-3 text-xs tracking-wide text-slate-300 uppercase md:px-6">
                     Actions
                   </th>
                 </tr>
@@ -333,31 +333,31 @@ export function ApiKeysManager() {
                 {keys.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-[var(--panel-border)]/70 last:border-b-0"
+                    className="border-b border-slate-800/70 last:border-b-0"
                   >
-                    <td className="px-5 py-3 font-semibold text-slate-800 md:px-6">
+                    <td className="px-5 py-3 font-semibold text-slate-100 md:px-6">
                       {item.label}
                     </td>
-                    <td className="px-5 py-3 font-mono text-sm text-slate-700 md:px-6">
+                    <td className="px-5 py-3 font-mono text-sm text-slate-300 md:px-6">
                       {item.maskedKey}
                     </td>
                     <td className="px-5 py-3 text-sm md:px-6">
                       <span
                         className={
                           item.revokedAt
-                            ? "rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700"
-                            : "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                            ? "rounded-full bg-rose-400/15 px-2.5 py-1 text-xs font-semibold text-rose-200"
+                            : "rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-200"
                         }
                       >
                         {item.revokedAt ? "Revoked" : "Active"}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm text-slate-600 md:px-6">
+                    <td className="px-5 py-3 text-sm text-slate-300 md:px-6">
                       {formatDate(item.createdAt)}
                     </td>
                     <td className="px-5 py-3 md:px-6">
                       {item.revokedAt ? (
-                        <span className="text-xs font-semibold text-slate-500">Unavailable</span>
+                        <span className="text-xs font-semibold text-slate-400">Unavailable</span>
                       ) : (
                         <div className="flex items-center gap-2">
                           <button
@@ -372,7 +372,7 @@ export function ApiKeysManager() {
                                 setMessage("Copied masked key. Create a new key to copy full value.");
                               }
                             }}
-                            className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                            className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
                           >
                             {copiedToken === `copy-row-${item.id}` ? "Copied" : "Copy"}
                           </button>
@@ -386,7 +386,7 @@ export function ApiKeysManager() {
                               void sendTestEvent(lastCreatedKey.key, `send-test-${item.id}`);
                             }}
                             disabled={sendingTestToken === `send-test-${item.id}`}
-                            className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {sendingTestToken === `send-test-${item.id}` ? "Sending..." : "Send Test"}
                           </button>
@@ -394,7 +394,7 @@ export function ApiKeysManager() {
                             type="button"
                             onClick={() => revokeKey(item.id)}
                             disabled={revokingId === item.id}
-                            className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {revokingId === item.id ? "Revoking..." : "Revoke"}
                           </button>
@@ -409,14 +409,14 @@ export function ApiKeysManager() {
         )}
       </section>
 
-      <section className="glass-panel animate-rise rounded-3xl p-5 md:p-6" style={{ animationDelay: "120ms" }}>
-        <h3 className="text-lg font-semibold text-slate-900">Developer Quickstart</h3>
-        <p className="mt-1 text-sm text-slate-500">
+      <section className="insights-surface animate-rise rounded-3xl p-5 md:p-6" style={{ animationDelay: "120ms" }}>
+        <h3 className="text-lg font-semibold text-slate-100">Developer Quickstart</h3>
+        <p className="mt-1 text-sm text-slate-300">
           Embed the SDK and initialize it with your API key to begin tracking behavior flows.
         </p>
 
         {!lastCreatedKey && newestActiveKey && (
-          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+          <p className="mt-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs font-medium text-amber-200">
             For security, full keys are only shown at creation time. Create a new key for ready-to-paste snippets.
           </p>
         )}
@@ -424,64 +424,64 @@ export function ApiKeysManager() {
         <div className="mt-4 space-y-4">
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Install FlowSense</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-300 uppercase">Install FlowSense</p>
               <button
                 type="button"
                 onClick={() => copyValue(installSnippet, "copy-install")}
-                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
               >
                 {copiedToken === "copy-install" ? "Copied" : "Copy"}
               </button>
             </div>
-            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+            <pre className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-slate-100">
               <code>{installSnippet}</code>
             </pre>
           </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Initialize</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-300 uppercase">Initialize</p>
               <button
                 type="button"
                 onClick={() => copyValue(initSnippet, "copy-init")}
-                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
               >
                 {copiedToken === "copy-init" ? "Copied" : "Copy"}
               </button>
             </div>
-            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+            <pre className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-slate-100">
               <code>{initSnippet}</code>
             </pre>
           </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Track Example</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-300 uppercase">Track Example</p>
               <button
                 type="button"
                 onClick={() => copyValue(trackSnippet, "copy-track")}
-                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
               >
                 {copiedToken === "copy-track" ? "Copied" : "Copy"}
               </button>
             </div>
-            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+            <pre className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-slate-100">
               <code>{trackSnippet}</code>
             </pre>
           </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Drop-In Snippet</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-300 uppercase">Drop-In Snippet</p>
               <button
                 type="button"
                 onClick={() => copyValue(fullSnippet, "copy-full")}
-                className="rounded-lg border border-[var(--panel-border)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
               >
                 {copiedToken === "copy-full" ? "Copied" : "Copy"}
               </button>
             </div>
-            <pre className="overflow-x-auto rounded-xl border border-[var(--panel-border)] bg-slate-950 px-4 py-3 text-xs text-slate-100">
+            <pre className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-slate-100">
               <code>{fullSnippet}</code>
             </pre>
           </div>
@@ -497,13 +497,13 @@ export function ApiKeysManager() {
                 void sendTestEvent(lastCreatedKey.key, "send-test-quickstart");
               }}
               disabled={sendingTestToken === "send-test-quickstart"}
-              className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {sendingTestToken === "send-test-quickstart" ? "Sending..." : "Send Test Event"}
             </button>
             <a
               href="/dashboard"
-              className="text-xs font-semibold text-slate-600 underline decoration-dotted underline-offset-4 transition hover:text-slate-900"
+              className="text-xs font-semibold text-slate-300 underline decoration-dotted underline-offset-4 transition hover:text-slate-100"
             >
               View this event in your dashboard
             </a>
@@ -511,7 +511,7 @@ export function ApiKeysManager() {
         </div>
       </section>
 
-      {message && <p className="text-sm font-medium text-slate-700">{message}</p>}
+      {message && <p className="text-sm font-medium text-slate-200">{message}</p>}
     </div>
   );
 }

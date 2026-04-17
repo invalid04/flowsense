@@ -2,6 +2,7 @@
 
 import Script from "next/script";
 import { useState } from "react";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 declare global {
   interface Window {
@@ -15,17 +16,18 @@ declare global {
 export default function SdkTestPage() {
   const [state, setState] = useState("/home");
   const [status, setStatus] = useState("SDK not initialized");
+  const baseUrl = getBaseUrl();
 
   return (
     <main className="min-h-screen p-8">
       <Script
-        src="/flowsense-sdk.js"
+        src={`${baseUrl}/flowsense-sdk.js`}
         strategy="afterInteractive"
         onLoad={() => {
           try {
             window.FlowSense?.init({
               apiKey: "test_key_123",
-              endpoint: "/api/ingest",
+              endpoint: `${baseUrl}/api/ingest`,
             });
             setStatus("SDK initialized");
           } catch (error) {

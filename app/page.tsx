@@ -1,77 +1,56 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
-const HOW_IT_WORKS_STEPS = [
+const SIGNAL_METRICS = [
+  { label: "Tracked Events", value: "12.4M", detail: "Last 30 days" },
+  { label: "Transition States", value: "1,284", detail: "Active model nodes" },
+  { label: "Prediction Accuracy", value: "89.2%", detail: "Top-3 outcomes" },
+];
+
+const CONTROL_MODULES = [
   {
-    title: "Instrument Your Product",
-    description:
-      "Install the FlowSense SDK or send events through the ingestion API using account-scoped API keys.",
+    name: "Flow Matrix",
+    description: "Live state transitions rendered as weighted edges across product paths.",
+    status: "Online",
   },
   {
-    title: "Model User Behavior",
-    description:
-      "FlowSense transforms live behavioral events into transition models across sessions and journeys.",
+    name: "Drop-Off Radar",
+    description: "Detect where intent collapses and rank breakpoints by impact.",
+    status: "Monitoring",
   },
   {
-    title: "Surface Actionable Insights",
-    description:
-      "Analyze conversion paths, drop-off points, loops, and predictions from a secure dashboard.",
+    name: "Loop Detector",
+    description: "Surface circular behavior and identify hesitation patterns.",
+    status: "Sampling",
+  },
+  {
+    name: "Prediction Engine",
+    description: "Estimate the next likely state from any current session position.",
+    status: "Ready",
   },
 ];
 
-const PLATFORM_CAPABILITIES = [
+const OPERATING_SYSTEM = [
   {
-    title: "Developer SDK",
-    description:
-      "Lightweight browser SDK for automatic event tracking and session modeling.",
+    title: "Instrument",
+    body: "SDK + API ingestion with account-scoped keys.",
   },
   {
-    title: "API Key Management",
-    description:
-      "Generate, manage, and revoke secure account-scoped API keys.",
+    title: "Model",
+    body: "Markov transition probabilities built from real user sessions.",
   },
   {
-    title: "Multi-Tenant Dashboard",
-    description:
-      "Clerk-authenticated workspace with fully isolated analytics per account.",
-  },
-  {
-    title: "Behavioral Insights Engine",
-    description: "Detect conversion paths, drop-off states, and looping behavior.",
-  },
-  {
-    title: "Live Event Ingestion",
-    description: "Stream user behavior into FlowSense in real time via API.",
-  },
-  {
-    title: "Prediction Engine",
-    description: "Query likely next actions from any current state.",
-  },
-];
-
-const AUDIENCE_COLUMNS = [
-  {
-    title: "Product",
-    description: "Understand where users succeed, stall, and drop off.",
-  },
-  {
-    title: "Engineering",
-    description: "Instrument flows quickly with SDK and API keys.",
-  },
-  {
-    title: "Growth",
-    description:
-      "Use predictive data to improve conversion and reduce friction.",
+    title: "Decide",
+    body: "Actionable insights for product, engineering, and growth teams.",
   },
 ];
 
 export default async function Page() {
   const { userId } = await auth();
   const dashboardHref = userId ? "/dashboard" : "/sign-in";
-  const publicAppUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://your-domain.com").replace(
-    /\/+$/,
-    ""
-  );
+  const publicAppUrl = getBaseUrl();
+
   const quickstartSnippet = `<script src="${publicAppUrl}/flowsense-sdk.js"></script>
 <script>
   FlowSense.init({
@@ -83,206 +62,145 @@ export default async function Page() {
 </script>`;
 
   return (
-    <main className="enterprise-grid min-h-screen px-4 py-8 md:px-8 md:py-10">
-      <section className="mx-auto max-w-7xl">
-        <div className="glass-panel animate-rise flex items-center justify-between rounded-3xl px-6 py-5">
-          <div>
-            <p className="text-xl font-semibold tracking-tight text-slate-900">FlowSense</p>
-            <p className="text-xs text-slate-500">Developer-First Behavioral Intelligence</p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href={dashboardHref}
-              className="enterprise-btn inline-flex items-center justify-center px-4 py-2 text-sm"
-            >
-              Open Dashboard
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-2 py-14 md:px-6 md:py-20">
-        <div className="max-w-4xl">
-          <p className="mb-4 text-sm font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-            Behavioral Analytics Platform
-          </p>
-
-          <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-slate-900 text-balance sm:text-6xl">
-            Behavioral Intelligence for Modern Product Teams
-          </h1>
-
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            Track user flows, generate predictive insights, and power behavioral analytics through
-            a developer-first platform built on Markov-based modeling.
-          </p>
-
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Link
-              href={dashboardHref}
-              className="enterprise-btn inline-flex items-center justify-center px-5 py-3 text-sm"
-            >
-              Open Dashboard
-            </Link>
-
-            <a
-              href="#developer-platform"
-              className="inline-flex items-center justify-center rounded-xl border border-[var(--panel-border)] bg-white/70 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-white hover:text-slate-900"
-            >
-              View Developer Platform
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="mx-auto max-w-7xl px-2 py-3 md:px-6">
-        <div className="mb-8 max-w-3xl">
-          <p className="text-sm font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-            How It Works
-          </p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {HOW_IT_WORKS_STEPS.map((step, index) => (
-            <div
-              key={step.title}
-              className="glass-panel animate-rise rounded-2xl p-6"
-              style={{ animationDelay: `${80 + index * 40}ms` }}
-            >
-              <p className="mb-3 text-sm font-semibold text-[var(--accent)]">
-                {String(index + 1).padStart(2, "0")}
-              </p>
-              <h2 className="text-xl font-semibold text-slate-900">{step.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{step.description}</p>
+    <main className="insights-workspace min-h-screen px-4 py-6 md:px-8 md:py-8">
+      <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-5">
+        <header className="insights-shell animate-rise rounded-2xl p-4 md:p-5" style={{ animationDelay: "40ms" }}>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-500/40 bg-black/55 text-slate-200">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                  <path
+                    d="M3 13h4l2-5 3 9 2-5h7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <div>
+                <p className="font-mono text-[0.72rem] tracking-[0.2em] text-slate-400 uppercase">FlowSense</p>
+                <p className="text-sm text-slate-300">Behavior Intelligence Console</p>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
 
-      <section id="developer-platform" className="mx-auto max-w-7xl px-2 py-16 md:px-6">
-        <div className="mb-8 max-w-3xl">
-          <p className="text-sm font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-            Platform Capabilities
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-            Developer Platform for Behavioral Intelligence
-          </h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {PLATFORM_CAPABILITIES.map((capability, index) => (
+            <div className="flex items-center gap-2">
+                <a
+                  href="#quickstart"
+                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-600/80 bg-black/30 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-400 hover:text-slate-100"
+                >
+                  API Setup
+                </a>
+              <Link
+                href={dashboardHref}
+                className="inline-flex min-h-10 items-center rounded-lg border border-slate-500/80 bg-slate-100 px-4 text-sm font-semibold text-black transition hover:bg-slate-200"
+              >
+                Open Dashboard
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <article className="insights-shell animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "90ms" }}>
+            <p className="font-mono text-xs tracking-[0.2em] text-slate-300 uppercase">Realtime Behavior OS</p>
+            <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-slate-50 md:text-6xl">
+              Product Telemetry That Feels Like an Instrument
+            </h1>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
+              A modular analytics surface for teams that want to read user movement, detect friction,
+              and steer journeys with clarity.
+            </p>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+              {SIGNAL_METRICS.map((metric) => (
+                <div key={metric.label} className="rounded-xl border border-slate-700/90 bg-black/30 p-4">
+                  <p className="font-mono text-[0.65rem] tracking-[0.14em] text-slate-400 uppercase">{metric.label}</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-100">{metric.value}</p>
+                  <p className="mt-1 text-xs text-slate-400">{metric.detail}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="insights-shell animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "130ms" }}>
+            <p className="font-mono text-xs tracking-[0.2em] text-slate-300 uppercase">Operating Chain</p>
+            <div className="mt-4 space-y-3">
+              {OPERATING_SYSTEM.map((item, index) => (
+                <div key={item.title} className="rounded-xl border border-slate-700/80 bg-black/25 p-4">
+                  <p className="font-mono text-[0.68rem] tracking-[0.14em] text-slate-400 uppercase">
+                    0{index + 1} {item.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-200">{item.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 grid grid-cols-6 gap-2">
+              {Array.from({ length: 18 }, (_, index) => (
+                <div
+                    key={`cell-${index}`}
+                    className={`h-5 rounded-sm border ${
+                    index % 4 === 0
+                      ? "border-slate-500/70 bg-slate-400/30"
+                      : "border-slate-700/90 bg-slate-900/75"
+                  }`}
+                />
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {CONTROL_MODULES.map((module, index) => (
             <article
-              key={capability.title}
-              className="glass-panel animate-rise rounded-2xl p-6"
-              style={{ animationDelay: `${220 + index * 35}ms` }}
+              key={module.name}
+              className="insights-feed-card animate-rise p-5"
+              style={{ animationDelay: `${160 + index * 35}ms` }}
             >
-              <h3 className="text-lg font-semibold text-slate-900">{capability.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{capability.description}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-mono text-xs tracking-[0.12em] text-slate-300 uppercase">{module.name}</p>
+                <span className="rounded-full border border-slate-500/60 bg-slate-500/15 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-200 uppercase">
+                  {module.status}
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-slate-300">{module.description}</p>
             </article>
           ))}
-        </div>
-      </section>
+        </section>
 
-      <section className="mx-auto max-w-7xl px-2 py-4 md:px-6">
-        <div className="glass-panel animate-rise rounded-3xl p-8" style={{ animationDelay: "350ms" }}>
-          <p className="text-sm font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-            Product Preview
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-            A Full Behavioral Analytics Workspace
-          </h2>
-          <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-600">
-            Monitor conversion behavior, identify churn points, inspect loop patterns, manage
-            developer access, and explore product flow intelligence from a unified dashboard.
-          </p>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <div className="badge-kpi rounded-2xl p-5">
-              <p className="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase">
-                Conversion Intelligence
-              </p>
-              <p className="mt-2 text-sm text-slate-700">
-                Trace high-value journeys and breakpoints across user states.
-              </p>
-            </div>
-            <div className="badge-kpi rounded-2xl p-5">
-              <p className="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase">
-                Predictive Analysis
-              </p>
-              <p className="mt-2 text-sm text-slate-700">
-                Inspect likely next actions from any point in a session.
-              </p>
-            </div>
-            <div className="badge-kpi rounded-2xl p-5">
-              <p className="text-xs font-semibold tracking-[0.12em] text-slate-500 uppercase">
-                Access and Workspace
-              </p>
-              <p className="mt-2 text-sm text-slate-700">
-                Secure account isolation with API key lifecycle controls.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-2 py-16 md:px-6">
-        <div className="glass-panel animate-rise rounded-3xl p-8" style={{ animationDelay: "380ms" }}>
-          <p className="text-sm font-semibold tracking-[0.16em] text-[var(--muted)] uppercase">
-            Developer Quickstart
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
-            Instrument in Minutes with SDK + API
-          </h2>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
-            Drop in one script, initialize with your API key, and start streaming behavioral events
-            to your account-scoped ingestion endpoint.
-          </p>
-          <pre className="mt-6 overflow-x-auto rounded-2xl border border-[var(--panel-border)] bg-slate-950/95 p-5 text-sm leading-6 text-slate-100">
-            <code>{quickstartSnippet}</code>
-          </pre>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-2 py-2 md:px-6">
-        <div className="mb-8 max-w-4xl">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
-            Built for Product, Engineering, and Growth Teams
-          </h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {AUDIENCE_COLUMNS.map((column, index) => (
-            <article
-              key={column.title}
-              className="glass-panel animate-rise rounded-2xl p-6"
-              style={{ animationDelay: `${430 + index * 30}ms` }}
-            >
-              <h3 className="text-xl font-semibold text-slate-900">{column.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{column.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-2 pb-8 pt-6 md:px-6">
-        <div
-          className="glass-panel animate-rise flex flex-col items-start justify-between gap-6 rounded-3xl p-8 md:flex-row md:items-center"
-          style={{ animationDelay: "500ms" }}
+        <section
+          id="quickstart"
+          className="insights-surface animate-rise rounded-3xl border border-slate-700/70 p-6 md:p-8"
+          style={{ animationDelay: "300ms" }}
         >
-          <div>
-            <p className="text-3xl font-semibold tracking-tight text-slate-900">
-              From Event Tracking to Product Intelligence
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              Capture behavioral data, model user journeys, and turn product usage into actionable
-              insight with FlowSense.
-            </p>
-          </div>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="font-mono text-xs tracking-[0.2em] text-slate-400 uppercase">Developer Quickstart</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
+                Attach FlowSense in under 60 seconds
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-slate-300">
+                Drop in one script, initialize with your API key, and send live events to your
+                account endpoint.
+              </p>
+              <div className="mt-6">
+                <Link
+                  href={dashboardHref}
+                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-500/80 bg-slate-100 px-5 text-sm font-semibold text-black transition hover:bg-slate-200"
+                >
+                  Launch Workspace
+                </Link>
+              </div>
+            </div>
 
-          <Link
-            href={dashboardHref}
-            className="enterprise-btn inline-flex items-center justify-center px-5 py-3 text-sm"
-          >
-            Launch FlowSense
-          </Link>
-        </div>
-      </section>
+            <pre className="w-full max-w-2xl overflow-x-auto rounded-2xl border border-slate-700 bg-black/85 p-4 text-xs leading-6 text-slate-100 md:text-sm">
+              <code>{quickstartSnippet}</code>
+            </pre>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

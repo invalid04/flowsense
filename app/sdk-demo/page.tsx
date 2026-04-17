@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Script from "next/script";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 declare global {
     interface Window {
@@ -15,16 +16,17 @@ declare global {
 export default function SdkDemoPage() {
   const router = useRouter();
   const pathname = usePathname();
+  const baseUrl = getBaseUrl();
 
   return (
     <main className="min-h-screen space-y-6 p-8">
       <Script
-        src="/flowsense-sdk.js"
+        src={`${baseUrl}/flowsense-sdk.js`}
         strategy="afterInteractive"
         onLoad={() => {
           window.FlowSense?.init({
             apiKey: "fs_live_7f4c431ed21945229a595981ef730d5c",
-            endpoint: "/api/ingest",
+            endpoint: `${baseUrl}/api/ingest`,
           });
           console.log("FlowSense SDK initialized");
         }}
