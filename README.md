@@ -1,36 +1,203 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlowSense
 
-## Getting Started
+**Product telemetry that tells you what’s happening—and what to do next.**
 
-First, run the development server:
+FlowSense is a behavioral intelligence platform that analyzes how users move through your product and turns that data into clear, actionable insights. Instead of dashboards and raw analytics, FlowSense surfaces drop-offs, loops, and high-converting paths automatically—so you can make better product decisions faster.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🚀 What FlowSense Does
+
+FlowSense replaces traditional analytics dashboards with an **insight-driven experience**.
+
+It helps you instantly understand:
+
+* Where users drop off
+* Where users get stuck (loops)
+* What paths lead to conversion
+* What actions to take next
+
+---
+
+## 🧠 Key Features
+
+### 🔍 Insight Engine
+
+Automatically generates high-impact insights like:
+
+* “Users are dropping off at checkout”
+* “Users are stuck between pricing and product”
+* “This is your strongest conversion path”
+
+---
+
+### 🔄 Flow Analysis
+
+Visualize how users move through your product:
+
+* step-by-step flows
+* drop-off percentages
+* conversion rates
+
+---
+
+### 📊 Event Monitoring
+
+Track interaction activity across your application:
+
+* event counts
+* session behavior
+* recent activity
+
+---
+
+### ⚡ Lightweight SDK
+
+Integrate in seconds:
+
+```html
+<script src="https://flowsense-five.vercel.app/flowsense-sdk.js"></script>
+<script>
+  FlowSense.init({
+    apiKey: "your_api_key",
+    endpoint: "https://flowsense-five.vercel.app/api/ingest"
+  });
+
+  FlowSense.track("/home");
+</script>
 ```
 
-Open [https://flowsense-five.vercel.app/](https://flowsense-five.vercel.app/) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔐 Multi-Tenant Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* Account-scoped API keys
+* Secure ingestion
+* Isolated data per workspace
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🏗️ How It Works
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+FlowSense uses a state-based model to understand user behavior:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Ingest**
+   Events are captured via the SDK and sent to the ingestion API
 
-## Deploy on Vercel
+2. **Model**
+   Transitions between states are stored and analyzed
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Analyze**
+   Behavioral patterns are detected:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   * drop-offs
+   * loops
+   * conversion paths
+
+4. **Surface Insights**
+   The system generates clear, actionable insights for your team
+
+---
+
+## 🧰 Tech Stack
+
+* **Frontend:** Next.js (App Router), React, Tailwind CSS
+* **Backend:** Next.js API routes
+* **Database:** PostgreSQL (via Drizzle ORM)
+* **Auth:** Clerk
+* **Deployment:** Vercel
+
+---
+
+## 📦 API Overview
+
+### Ingest Event
+
+```http
+POST /api/ingest
+Authorization: Bearer <API_KEY>
+Content-Type: application/json
+```
+
+```json
+{
+  "sessionId": "session_123",
+  "state": "/home"
+}
+```
+
+---
+
+### Insights
+
+* `/api/insights/summary`
+* `/api/insights/dropoff`
+* `/api/insights/loops`
+* `/api/insights/conversion-path`
+
+---
+
+### Flows
+
+* `/api/flows`
+
+---
+
+### Events
+
+* `/api/events`
+
+---
+
+## 🧪 Local Development
+
+```bash
+git clone https://github.com/your-username/flowsense.git
+cd flowsense
+npm install
+npm run dev
+```
+
+---
+
+## 🔑 Environment Variables
+
+Create a `.env` file:
+
+```env
+DATABASE_URL=your_database_url
+CLERK_SECRET_KEY=your_clerk_secret
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_public_key
+```
+
+---
+
+## 🎯 Philosophy
+
+FlowSense is built on a simple idea:
+
+> You shouldn’t have to analyze charts to understand your product.
+
+Instead of showing data and expecting interpretation, FlowSense delivers **answers**:
+
+* what is happening
+* why it matters
+* what to do next
+
+---
+
+## 📌 Status
+
+FlowSense is currently in **early-stage development (V1)** and actively evolving based on user feedback.
+
+---
+
+## 🤝 Contributing
+
+Contributions, feedback, and ideas are welcome.
+
+---
+
+## 📄 License
+
+MIT License
