@@ -32,12 +32,12 @@ function formatLoopLabel(loop: LoopInsight): string {
 
 function impactBadge(impactLevel: ImpactLevel) {
   if (impactLevel === "high") {
-    return { label: "High Impact", icon: "??", className: "border-red-300/50 bg-red-500/20 text-red-100" };
+    return { label: "High Impact", icon: "HIGH", className: "border-red-300/50 bg-red-500/20 text-red-100" };
   }
   if (impactLevel === "medium") {
-    return { label: "Medium Impact", icon: "??", className: "border-amber-300/50 bg-amber-500/20 text-amber-100" };
+    return { label: "Medium Impact", icon: "MED", className: "border-amber-300/50 bg-amber-500/20 text-amber-100" };
   }
-  return { label: "Low Impact", icon: "??", className: "border-emerald-300/50 bg-emerald-500/20 text-emerald-100" };
+  return { label: "Low Impact", icon: "LOW", className: "border-emerald-300/50 bg-emerald-500/20 text-emerald-100" };
 }
 
 export function LoopInsightCard({ topLoop, error, totalTransitions, impactLevel }: LoopInsightCardProps) {

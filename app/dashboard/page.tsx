@@ -4,6 +4,7 @@ import { StateTransitionsChart } from "./StateTransitionsChart";
 import { DropoffInsightCard } from "./DropoffInsightCard";
 import { ConversionPathInsightCard } from "./ConversionPathInsightCard";
 import { LoopInsightCard } from "./LoopInsightCard";
+import { AutoSummaryCard } from "./AutoSummaryCard";
 import { TrackForm } from "./TrackForm";
 import { SampleDatasetLoader } from "./SampleDatasetLoader";
 import { db } from "@/db";
@@ -511,6 +512,7 @@ export default async function HomePage() {
 
   return (
     <div className="w-full space-y-8">
+      <AutoSummaryCard />
       <SampleDatasetLoader />
 
       <section className="insights-surface animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "40ms" }}>

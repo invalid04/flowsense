@@ -27,51 +27,89 @@ type FlowsResponse = {
   error?: string;
 };
 
-function getOptimizationSuggestion(flow: Flow): string {
-  const dropStages = flow.stages
+const CRITICAL_DROPOFF_THRESHOLD = 20;
+const WARNING_DROPOFF_THRESHOLD = 10;
+
+type DropSeverity = "critical" | "warning";
+
+function getDropSeverity(drop: number | undefined): DropSeverity | null {
+  if (drop === undefined) return null;
+  if (drop >= CRITICAL_DROPOFF_THRESHOLD) return "critical";
+  if (drop >= WARNING_DROPOFF_THRESHOLD) return "warning";
+  return null;
+}
+
+function getTopDropoff(flow: Flow) {
+  const ranked = flow.stages
     .map((stage, index) => ({
       stage,
       index,
       drop: index > 0 ? flow.stages[index - 1].drop ?? 0 : 0,
+      previousLabel: index > 0 ? flow.stages[index - 1].label : null,
     }))
     .filter((entry) => entry.index > 0)
     .sort((a, b) => b.drop - a.drop);
 
-  const topDrop = dropStages[0];
-  if (!topDrop || topDrop.drop < 10) {
-    return "This flow is relatively stable. Keep reducing unnecessary fields to preserve momentum.";
+  return ranked[0] ?? null;
+}
+
+function getOptimizationSuggestion(flow: Flow): string {
+  const topDrop = getTopDropoff(flow);
+  if (!topDrop || topDrop.drop < WARNING_DROPOFF_THRESHOLD || !topDrop.previousLabel) {
+    return "Keep this flow stable by preserving momentum and removing any new optional friction before users continue.";
   }
 
-  if (topDrop.stage.label.toLowerCase().includes("checkout")) {
-    return "Consider reducing steps before checkout and tighten trust messaging near payment.";
+  const fromLabel = topDrop.previousLabel;
+  const toLabel = topDrop.stage.label;
+  const fromKey = fromLabel.toLowerCase();
+  const toKey = toLabel.toLowerCase();
+
+  if (toKey.includes("checkout") || toKey.includes("payment") || toKey.includes("purchase")) {
+    return `Reduce friction between ${fromLabel} and ${toLabel} by shortening payment steps and tightening trust messaging before users continue.`;
   }
 
-  return `Simplify the handoff into ${topDrop.stage.label} and remove optional friction before this step.`;
+  if (fromKey.includes("pricing") || toKey.includes("pricing")) {
+    return `Reduce friction between ${fromLabel} and ${toLabel} by clarifying plan differences and strengthening one primary CTA.`;
+  }
+
+  return `Reduce friction between ${fromLabel} and ${toLabel} by removing unnecessary decisions before users move forward.`;
+}
+
+function getFlowSummary(flow: Flow): string {
+  const topDrop = getTopDropoff(flow);
+  if (!topDrop || topDrop.drop < WARNING_DROPOFF_THRESHOLD || !topDrop.previousLabel) {
+    return "Biggest issue: This flow is stable with no major abandonment points.";
+  }
+
+  return `Biggest issue: Users drop off between ${topDrop.previousLabel} and ${topDrop.stage.label} (${topDrop.drop.toFixed(0)}%).`;
 }
 
 function StageCard({
   stage,
   isLast,
   priorLabel,
+  isHighestDropPoint,
 }: {
   stage: FlowStage;
   isLast: boolean;
   priorLabel: string | null;
+  isHighestDropPoint: boolean;
 }) {
   const dropValue = stage.drop ?? 0;
-  const isCriticalDrop = !isLast && dropValue >= 25;
+  const severity = !isLast ? getDropSeverity(dropValue) : null;
+  const showSeverityLabel = !isLast && severity !== null;
 
   const toneClass =
-    isCriticalDrop
+    isHighestDropPoint && severity === "critical"
       ? "border-red-400/80 bg-red-950/25 shadow-[0_0_22px_rgba(239,68,68,0.24)]"
-      : stage.tone === "drop"
+      : severity === "warning"
         ? "border-orange-500/60 bg-orange-950/20"
-        : stage.tone === "success"
+      : stage.tone === "success"
           ? "border-emerald-500/60 bg-emerald-950/20"
           : "border-slate-700 bg-black";
 
-  const tooltip = isCriticalDrop
-    ? "This step loses the most users"
+  const tooltip = isHighestDropPoint && dropValue > 0
+    ? "Highest drop-off point in this flow"
     : undefined;
 
   return (
@@ -96,14 +134,25 @@ function StageCard({
           <div className="h-full rounded bg-slate-200" style={{ width: `${stage.percent}%` }} />
         </div>
         <p className="mt-1 text-sm text-slate-400">{stage.percent}% remaining</p>
-        {isCriticalDrop ? (
-          <p className="mt-1 text-xs font-semibold text-red-200">This step loses the most users</p>
+        {isHighestDropPoint && dropValue > 0 ? (
+          <p
+            className={[
+              "mt-1 text-xs font-semibold",
+              severity === "critical"
+                ? "text-red-200"
+                : severity === "warning"
+                  ? "text-orange-200"
+                  : "text-slate-300",
+            ].join(" ")}
+          >
+            Highest drop-off point in this flow
+          </p>
         ) : null}
       </article>
 
-      {!isLast && stage.drop !== undefined ? (
-        <p className={isCriticalDrop ? "whitespace-nowrap text-sm font-semibold text-red-300" : "whitespace-nowrap text-sm font-semibold text-orange-400"}>
-          {isCriticalDrop ? "??" : "??"} {stage.drop.toFixed(0)}% of users abandon here
+      {showSeverityLabel && stage.drop !== undefined ? (
+        <p className={severity === "critical" ? "whitespace-nowrap text-sm font-semibold text-red-300" : "whitespace-nowrap text-sm font-semibold text-orange-400"}>
+          {severity === "critical" ? "CRITICAL:" : "WARNING:"} {stage.drop.toFixed(0)}% of users abandon here
           {priorLabel ? ` (${priorLabel} -> ${stage.label})` : ""}
         </p>
       ) : null}
@@ -144,7 +193,7 @@ export default function FlowsPage() {
     void load();
   }, []);
 
-  const avgHighestDrop = useMemo(() => {
+  const biggestDropoffPoint = useMemo(() => {
     if (!data) return 0;
 
     const highestPerFlow = data.flows.map((flow) =>
@@ -152,7 +201,7 @@ export default function FlowsPage() {
     );
 
     if (highestPerFlow.length === 0) return 0;
-    return highestPerFlow.reduce((sum, value) => sum + value, 0) / highestPerFlow.length;
+    return Math.max(...highestPerFlow);
   }, [data]);
 
   return (
@@ -183,9 +232,9 @@ export default function FlowsPage() {
           </p>
         </article>
         <article className="insights-surface rounded-2xl px-5 py-4">
-          <p className="text-sm text-slate-400">Highest Avg Drop-off</p>
+          <p className="text-sm text-slate-400">Biggest Drop-off Point</p>
           <p className="mt-1 text-4xl font-semibold tracking-tight text-slate-100">
-            {data ? `${avgHighestDrop.toFixed(1)}%` : loading ? "..." : "0.0%"}
+            {data ? `${biggestDropoffPoint.toFixed(1)}%` : loading ? "..." : "0.0%"}
           </p>
         </article>
         <article className="insights-surface rounded-2xl px-5 py-4">
@@ -209,25 +258,34 @@ export default function FlowsPage() {
       {!loading && !error ? (
         <section className="space-y-4">
           {(data?.flows ?? []).map((flow) => (
-            <article key={flow.name} className="insights-surface rounded-2xl p-5">
-              <h3 className="text-3xl font-semibold tracking-tight text-slate-100">{flow.name}</h3>
-              <div className="custom-scroll-x mt-4 overflow-x-auto pb-2">
-                <div className="inline-flex min-w-full items-start gap-2">
-                  {flow.stages.map((stage, index) => (
-                    <StageCard
-                      key={`${flow.name}-${stage.label}-${index}`}
-                      stage={stage}
-                      isLast={index === flow.stages.length - 1}
-                      priorLabel={index > 0 ? flow.stages[index - 1].label : null}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 rounded-xl border border-slate-700/80 bg-black/30 p-3">
-                <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Optimization suggestion</p>
-                <p className="mt-1 text-sm text-slate-200">{getOptimizationSuggestion(flow)}</p>
-              </div>
-            </article>
+            (() => {
+              const topDrop = getTopDropoff(flow);
+              const highestDropIndex = topDrop?.index ?? -1;
+
+              return (
+                <article key={flow.name} className="insights-surface rounded-2xl p-5">
+                  <h3 className="text-3xl font-semibold tracking-tight text-slate-100">{flow.name}</h3>
+                  <p className="mt-2 text-sm text-slate-200">{getFlowSummary(flow)}</p>
+                  <div className="custom-scroll-x mt-4 overflow-x-auto pb-2">
+                    <div className="inline-flex min-w-full items-start gap-2">
+                      {flow.stages.map((stage, index) => (
+                        <StageCard
+                          key={`${flow.name}-${stage.label}-${index}`}
+                          stage={stage}
+                          isLast={index === flow.stages.length - 1}
+                          priorLabel={index > 0 ? flow.stages[index - 1].label : null}
+                          isHighestDropPoint={index === highestDropIndex}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-slate-700/80 bg-black/30 p-3">
+                    <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Optimization suggestion</p>
+                    <p className="mt-1 text-sm text-slate-200">{getOptimizationSuggestion(flow)}</p>
+                  </div>
+                </article>
+              );
+            })()
           ))}
         </section>
       ) : null}
