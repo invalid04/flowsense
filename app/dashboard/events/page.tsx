@@ -192,17 +192,17 @@ export default function EventsPage() {
         {!loading && !error ? (
           <div>
             {filteredRows.length > 0 ? (
-              filteredRows.map((event) => (
+              filteredRows.map((event, rowIndex) => (
                 <article
-                  key={`${event.name}-${event.type}`}
+                  key={`${event.name}-${event.type}-${event.lastTriggered}-${event.count}-${rowIndex}`}
                   className="insights-table-row grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_8rem_8rem] items-start px-4 py-4 text-base last:border-b-0"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-slate-100">{event.name}</p>
                     <p className="text-sm text-slate-500">{event.type}</p>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {(event.tags.length > 0 ? event.tags : ["Conversion Critical"]).map((tag) => (
-                        <span key={`${event.name}-${tag}`} className="rounded-full border border-slate-600 bg-slate-900 px-2 py-0.5 text-xs text-slate-300">
+                      {(event.tags.length > 0 ? event.tags : ["Conversion Critical"]).map((tag, tagIndex) => (
+                        <span key={`${event.name}-${event.type}-${tag}-${tagIndex}`} className="rounded-full border border-slate-600 bg-slate-900 px-2 py-0.5 text-xs text-slate-300">
                           {normalizeTag(tag)}
                         </span>
                       ))}

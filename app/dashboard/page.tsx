@@ -405,6 +405,7 @@ async function getDatasetStatus(accountId: string): Promise<DatasetStatus> {
 
 export default async function HomePage() {
   const account = await getOrCreateAccount();
+  console.log("[dashboard] accountId:", account.id);
   const [data, dropoffData, conversionPathResult, loopInsightResult, datasetStatus] =
     await Promise.all([
       getAnalytics(account.id),
