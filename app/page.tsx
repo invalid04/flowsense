@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { getBaseUrl } from "@/lib/getBaseUrl";
+import { FlowSenseLogo } from "@/app/components/FlowSenseLogo";
 
 const SIGNAL_METRICS = [
   { label: "Overall Conversion", value: "17.4%", detail: "Most users drop before checkout" },
@@ -65,7 +66,10 @@ export default async function Page() {
       <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-5">
         <header className="insights-shell animate-rise rounded-2xl p-4 md:p-5" style={{ animationDelay: "40ms" }}>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
+            <div className="group/logo flex items-center gap-3 text-slate-100">
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-700/80 bg-black/30">
+                <FlowSenseLogo className="h-5 w-5" />
+              </div>
               <div>
                 <p className="font-mono text-[0.72rem] tracking-[0.2em] text-slate-400 uppercase">FlowSense</p>
                 <p className="text-sm text-slate-300">Conversion Intelligence Console</p>
