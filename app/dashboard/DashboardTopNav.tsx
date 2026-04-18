@@ -3,6 +3,7 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FlowSenseLogo } from "@/app/components/FlowSenseLogo";
 
 const navItems = [
   { href: "/dashboard", label: "Growth Opportunities" },
@@ -18,11 +19,9 @@ export function DashboardTopNav() {
     <header className="border-b border-slate-900/90 bg-black/90 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-[88rem] items-center justify-between px-4 md:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="inline-flex items-center gap-2.5 text-slate-100">
+          <Link href="/dashboard" className="group/logo inline-flex items-center gap-2.5 text-slate-100">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-black">
-              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                <path d="M3 13h4l2-5 3 9 2-5h7" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <FlowSenseLogo className="h-3.5 w-3.5" />
             </span>
             <span className="text-lg font-semibold tracking-tight">FlowSense</span>
           </Link>

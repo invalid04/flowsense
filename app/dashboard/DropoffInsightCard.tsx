@@ -24,27 +24,44 @@ function toReadableStateLabel(state: string): string {
 
 function impactBadge(impactLevel: ImpactLevel) {
   if (impactLevel === "high") {
-    return { label: "High Impact", icon: "HIGH", className: "border-red-300/50 bg-red-500/20 text-red-100" };
+    return { label: "High Impact", icon: "HIGH", className: "border-white/20 bg-white/10 text-white" };
   }
   if (impactLevel === "medium") {
-    return { label: "Medium Impact", icon: "MED", className: "border-amber-300/50 bg-amber-500/20 text-amber-100" };
+    return { label: "Medium Impact", icon: "MED", className: "border-white/15 bg-white/5 text-white/80" };
   }
-  return { label: "Low Impact", icon: "LOW", className: "border-emerald-300/50 bg-emerald-500/20 text-emerald-100" };
+  return { label: "Low Impact", icon: "LOW", className: "border-white/10 bg-white/5 text-white/60" };
+}
+
+function impactCardClass(impactLevel: ImpactLevel) {
+  if (impactLevel === "high") {
+    return "border-white/20 scale-[1.01] shadow-[0_14px_30px_rgba(0,0,0,0.34)]";
+  }
+  if (impactLevel === "low") {
+    return "border-white/10 opacity-90";
+  }
+  return "border-white/15";
 }
 
 export function DropoffInsightCard({ biggestDropoff, totalTransitions, impactLevel }: DropoffInsightCardProps) {
   const impact = impactBadge(impactLevel);
+  const cardClass = impactCardClass(impactLevel);
+  const headlineClass =
+    impactLevel === "high"
+      ? "text-[2.1rem] font-extrabold text-slate-100"
+      : impactLevel === "low"
+        ? "text-2xl font-semibold text-slate-200"
+        : "text-2xl font-bold text-slate-100";
 
   if (!biggestDropoff) {
     return (
-      <article className="insights-feed-card insights-feed-card--dropoff animate-rise p-6 md:p-7">
+      <article className={`insights-feed-card insights-card-indicator animate-rise p-6 md:p-7 ${cardClass}`}>
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold tracking-[0.04em] text-orange-200">Problem</p>
+          <p className="text-xs font-semibold tracking-[0.12em] text-slate-300 uppercase">Decision Signal</p>
           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${impact.className}`}>
             {impact.icon} {impact.label}
           </span>
         </div>
-        <p className="mt-3 text-balance text-2xl leading-tight font-bold tracking-tight text-orange-100 md:text-[2rem]">
+        <p className={`mt-3 text-balance leading-tight tracking-tight md:text-[2rem] ${headlineClass}`}>
           Checkout friction not yet confirmed
         </p>
         <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Metric</p>
@@ -64,14 +81,14 @@ export function DropoffInsightCard({ biggestDropoff, totalTransitions, impactLev
   const shareOfModel = totalTransitions > 0 ? (biggestDropoff.incomingCount / totalTransitions) * 100 : 0;
 
   return (
-    <article className="insights-feed-card insights-feed-card--dropoff animate-rise p-6 md:p-7">
+    <article className={`insights-feed-card insights-card-indicator animate-rise p-6 md:p-7 ${cardClass}`}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.04em] text-orange-200">Problem</p>
+        <p className="text-xs font-semibold tracking-[0.12em] text-slate-300 uppercase">Decision Signal</p>
         <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${impact.className}`}>
           {impact.icon} {impact.label}
         </span>
       </div>
-      <p className="mt-3 text-balance text-2xl leading-tight font-bold tracking-tight text-orange-100 md:text-[2rem]">
+      <p className={`mt-3 text-balance leading-tight tracking-tight md:text-[2rem] ${headlineClass}`}>
         Checkout is killing your conversions
       </p>
       <p className="mt-2 text-sm text-slate-200">Critical step: {transitionLabel}</p>
@@ -91,7 +108,7 @@ export function DropoffInsightCard({ biggestDropoff, totalTransitions, impactLev
 
       <div className="mt-5 flex items-center justify-between text-xs text-slate-400">
         <span>Impact driver: high drop-off + high traffic</span>
-        <a href="#supporting-data" className="font-semibold text-orange-200 hover:text-orange-100">
+        <a href="#supporting-data" className="font-semibold text-slate-200 hover:text-slate-100">
           View details
         </a>
       </div>

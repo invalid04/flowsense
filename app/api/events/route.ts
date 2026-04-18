@@ -88,20 +88,20 @@ export async function GET() {
     const events = rawEvents.map((event) => {
       const tags: string[] = [];
 
-      if (event.type === "Conversion") tags.push("Conversion-related");
-      if (event.type === "Error" || event.deltaTone === "down") tags.push("Drop-off related");
-      if (maxCount > 0 && event.count / maxCount >= 0.55) tags.push("High frequency");
+      if (event.type === "Conversion") tags.push("Conversion Critical");
+      if (event.type === "Error" || event.deltaTone === "down") tags.push("Drop-off Risk");
+      if (maxCount > 0 && event.count / maxCount >= 0.55) tags.push("High Frequency");
 
-      let meaning = "This event helps map how users navigate your product.";
+      let meaning = "This signal maps navigation patterns across your product.";
 
       if (event.type === "Conversion") {
-        meaning = "This event is part of your highest converting path or a conversion-intent transition.";
+        meaning = "This signal appears in high-conversion paths and reflects conversion intent.";
       } else if (event.type === "Error") {
-        meaning = "This event likely contributes to abandonment and should be monitored closely.";
+        meaning = "This signal likely contributes to abandonment and should be prioritized for fixes.";
       } else if (event.deltaTone === "down") {
-        meaning = "This event appears in a declining pattern and may signal conversion friction.";
-      } else if (tags.includes("High frequency")) {
-        meaning = "This event is high volume and strongly influences overall funnel performance.";
+        meaning = "This signal is trending down and may indicate emerging conversion friction.";
+      } else if (tags.includes("High Frequency")) {
+        meaning = "This high-frequency signal strongly influences overall funnel performance.";
       }
 
       return {

@@ -205,7 +205,7 @@ export async function GET() {
         supportingMetric: `${formatPercent(percentage)} of transitions are caught in this loop`,
         issuePercentage: percentage,
       });
-    }
+    } 
 
     let strongestEdge:
       | {

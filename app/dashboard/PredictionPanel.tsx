@@ -29,7 +29,8 @@ export function PredictionPanel() {
   };
 
   return (
-    <div className="insights-surface rounded-2xl p-5 md:p-6">
+    <div className="insights-system-card insights-console-module insights-card-indicator rounded-2xl p-5 md:p-6">
+      <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">System Module</p>
       <h3 className="text-base font-semibold text-slate-100">Predict Next Step</h3>
       <p className="mt-1 text-sm text-slate-400">Estimate the most likely next state from any point in the journey.</p>
 
@@ -37,13 +38,13 @@ export function PredictionPanel() {
         <label className="field flex-1">
           <span className="field-label text-slate-400">Current State</span>
           <input
-            className="insights-input"
+            className="insights-input-console"
             value={currentState}
             onChange={(e) => setCurrentState(e.target.value)}
             placeholder="/home"
           />
         </label>
-        <button className="insights-btn w-full sm:w-auto" type="submit" disabled={loading}>
+        <button className="insights-btn w-auto" type="submit" disabled={loading}>
           {loading ? "Predicting..." : "Run Prediction"}
         </button>
       </form>

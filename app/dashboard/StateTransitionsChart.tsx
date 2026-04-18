@@ -65,7 +65,8 @@ export function StateTransitionsChart() {
   };
 
   return (
-    <div className="insights-surface rounded-2xl p-5 md:p-6">
+    <div className="insights-system-card insights-card-indicator rounded-2xl p-5 md:p-6">
+      <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Behavior Signals</p>
       <h3 className="text-base font-semibold text-slate-100">Transition Distribution</h3>
       <p className="mt-1 text-sm text-slate-400">Support insight cards with raw probability data per destination state.</p>
 

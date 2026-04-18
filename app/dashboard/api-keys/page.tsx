@@ -2,17 +2,21 @@ import { ApiKeysManager } from "./ApiKeysManager";
 
 export default function ApiKeysPage() {
   return (
-    <div className="space-y-4">
-      <section className="insights-surface animate-rise rounded-3xl p-6 md:p-8">
-        <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">
-          Product Data Connection
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-          Connect Your Product Data
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-          Create and manage ingestion credentials so FlowSense can analyze your journeys and surface growth actions.
-        </p>
+    <div className="space-y-6">
+      <section className="insights-module-card insights-card-indicator animate-rise rounded-3xl p-6 md:p-8">
+        <div className="insights-module-header">
+          <p className="insights-module-label">FLOWSENSE - DATA CONNECTION</p>
+          <h1 className="insights-module-title">Connect Your Product Data</h1>
+          <p className="insights-module-support">
+            Ingest real user behavior to power your conversion intelligence.
+          </p>
+          <div className="insights-signal-bars w-24">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
       </section>
 
       <ApiKeysManager />

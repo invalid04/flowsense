@@ -59,7 +59,7 @@ export function SampleDatasetLoader() {
 
   if (sampleMode === "1" || sampleMode === "loaded" || message) {
     return (
-      <div className="insights-surface rounded-2xl px-5 py-4">
+      <div className="insights-system-card insights-card-indicator rounded-2xl px-5 py-4">
         <p className="text-sm font-semibold tracking-[0.12em] text-slate-400 uppercase">Guided Start</p>
         <p className="mt-2 text-sm text-slate-300">
           {sampleMode === "loaded" && status === "idle"

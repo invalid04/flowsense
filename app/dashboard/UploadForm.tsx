@@ -44,7 +44,8 @@ export function UploadForm() {
   };
 
   return (
-    <div className="insights-surface rounded-2xl p-5 md:p-6">
+    <div className="insights-system-card insights-console-module insights-card-indicator rounded-2xl p-5 md:p-6">
+      <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">System Ingestion</p>
       <h3 className="text-base font-semibold text-slate-100">Upload Event Data</h3>
       <p className="mt-1 text-sm text-slate-400">Import a CSV to refresh sessions and transition probabilities.</p>
 
@@ -58,10 +59,10 @@ export function UploadForm() {
             type="file"
             accept=".csv"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="insights-input"
+            className="insights-input-console"
           />
         </label>
-        <button type="submit" disabled={loading} className="insights-btn w-full sm:w-auto">
+        <button type="submit" disabled={loading} className="insights-btn w-auto">
           {loading ? "Uploading..." : "Upload CSV"}
         </button>
       </form>

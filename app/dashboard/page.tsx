@@ -511,21 +511,30 @@ export default async function HomePage() {
   ].sort((a, b) => b.score - a.score);
 
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full space-y-10">
       <AutoSummaryCard />
       <SampleDatasetLoader />
 
-      <section className="insights-surface animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "40ms" }}>
+      <section
+        className="insights-module-card insights-card-indicator animate-rise rounded-3xl p-6 md:p-8"
+        style={{ animationDelay: "40ms" }}
+      >
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-3">
-            <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FlowSense</p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-50 md:text-5xl">Growth Opportunities</h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-slate-200 md:text-base">
-              Understand where users drop off and get clear actions to increase conversions.
+          <div className="insights-module-header">
+            <p className="insights-module-label">FLOWSENSE - DECISION LAYER</p>
+            <h1 className="insights-module-title">Growth Opportunities</h1>
+            <p className="insights-module-support">
+              Understand where users drop off and what to fix first.
             </p>
+            <div className="insights-signal-bars w-24">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-700/80 bg-slate-950/45 px-4 py-3">
+          <div className="insights-system-card rounded-2xl px-4 py-3">
             <p className="text-xs font-semibold tracking-[0.12em] text-slate-300 uppercase">Active Dataset</p>
             <p className="mt-1 text-sm font-semibold text-slate-100">
               Rows: {datasetStatus.rows.toLocaleString()} | Sessions: {datasetStatus.sessions.toLocaleString()}
@@ -537,9 +546,9 @@ export default async function HomePage() {
 
       <section className="space-y-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.14em] text-rose-300 uppercase">Section 1</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-100">What to Fix First</h2>
-          <p className="mt-1 text-sm text-slate-300">Priority-ranked actions based on impact score.</p>
+          <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FLOWSENSE - PRIORITY ENGINE</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Fix Priorities</h2>
+          <p className="mt-1 text-sm text-slate-300">Priority-ranked interventions based on modeled conversion impact.</p>
         </div>
 
         <article className="insights-feed-card animate-rise p-6 md:p-7" style={{ animationDelay: "100ms" }}>
@@ -568,8 +577,9 @@ export default async function HomePage() {
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 2</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Insights Feed</h2>
+            <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FLOWSENSE - DECISION OUTPUT</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Decision Output</h2>
+            <p className="mt-1 text-sm text-slate-300">System-ranked patterns with clear action direction.</p>
           </div>
         </div>
 
@@ -593,18 +603,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="supporting-data" className="mt-14 space-y-4 opacity-85">
+      <section id="supporting-data" className="mt-14 space-y-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Section 3</p>
-          <h2 className="text-xl font-medium tracking-tight text-slate-300">Supporting Data</h2>
-          <p className="mt-1 text-sm text-slate-400">Raw transition data backing each recommendation.</p>
+          <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FLOWSENSE - BEHAVIOR SIGNALS</p>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-200">Behavior Signals</h2>
+          <p className="mt-1 text-sm text-slate-300">Modeled evidence that powers every recommendation.</p>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="animate-rise" style={{ animationDelay: "180ms" }}>
             <StateTransitionsChart />
           </div>
-          <div className="insights-surface animate-rise rounded-2xl p-5 md:p-6" style={{ animationDelay: "210ms" }}>
+          <div className="insights-system-card insights-support-module insights-card-indicator animate-rise rounded-2xl p-5 md:p-6" style={{ animationDelay: "210ms" }}>
             <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Behavior Engine Snapshot</p>
             <p className="mt-3 text-sm text-slate-300">
               {topTransition
@@ -616,10 +626,11 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="insights-surface animate-rise overflow-hidden rounded-2xl" style={{ animationDelay: "240ms" }}>
+        <div className="insights-table-shell insights-support-module animate-rise" style={{ animationDelay: "240ms" }}>
           <div className="border-b border-slate-700/80 px-5 py-4 md:px-6">
-            <h3 className="text-sm font-semibold text-slate-300">Transition Table</h3>
-            <p className="text-sm text-slate-400">Detailed edges powering your current recommendations.</p>
+            <p className="text-xs font-semibold tracking-[0.12em] text-slate-300 uppercase">Signal Table</p>
+            <h3 className="mt-1 text-sm font-semibold text-slate-200">Transition Signal Matrix</h3>
+            <p className="text-sm text-slate-400">Detailed edges powering current fix priorities.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
@@ -636,12 +647,12 @@ export default async function HomePage() {
                   transitions.map((transition, index) => (
                     <tr
                       key={`${transition.fromState}-${transition.toState}-${index}`}
-                      className="border-b border-slate-800/70 text-slate-200 last:border-b-0"
+                      className="insights-table-row text-slate-200 last:border-b-0"
                     >
-                      <td className="px-5 py-3 font-mono text-sm md:px-6">{transition.fromState}</td>
-                      <td className="px-5 py-3 font-mono text-sm md:px-6">{transition.toState}</td>
-                      <td className="px-5 py-3 md:px-6">{transition.count}</td>
-                      <td className="px-5 py-3 font-semibold text-cyan-300 md:px-6">
+                      <td className="px-5 py-4 font-mono text-sm md:px-6">{transition.fromState}</td>
+                      <td className="px-5 py-4 font-mono text-sm md:px-6">{transition.toState}</td>
+                      <td className="px-5 py-4 md:px-6">{transition.count}</td>
+                      <td className="px-5 py-4 font-semibold text-slate-200 md:px-6">
                         {(transition.probability * 100).toFixed(1)}%
                       </td>
                     </tr>
@@ -661,12 +672,12 @@ export default async function HomePage() {
 
       <section className="space-y-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 4</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Deep Dive</h2>
-          <p className="mt-1 text-sm text-slate-200">Optional controls for advanced analysis and data operations.</p>
+          <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FLOWSENSE - SYSTEM CONTROLS</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-100">System Controls</h2>
+          <p className="mt-1 text-sm text-slate-300">Advanced modules for prediction and ingestion validation.</p>
         </div>
 
-        <details className="insights-surface rounded-2xl p-5 md:p-6">
+        <details className="insights-system-card insights-support-module insights-card-indicator rounded-2xl p-5 md:p-6">
           <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200">
             Expand advanced tools
           </summary>

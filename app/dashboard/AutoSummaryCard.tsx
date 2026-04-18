@@ -19,22 +19,22 @@ type SummaryInsight = {
 function issueTone(issueType: IssueType) {
   if (issueType === "dropoff") {
     return {
-      cardClass: "insights-feed-card--dropoff",
-      headlineClass: "text-orange-100",
+      cardClass: "",
+      headlineClass: "text-slate-100",
     };
   }
 
   if (issueType === "loop") {
     return {
-      cardClass: "insights-feed-card--loop",
-      headlineClass: "text-violet-100",
+      cardClass: "",
+      headlineClass: "text-slate-100",
     };
   }
 
   if (issueType === "strong_path") {
     return {
-      cardClass: "insights-feed-card--success",
-      headlineClass: "text-emerald-100",
+      cardClass: "",
+      headlineClass: "text-slate-100",
     };
   }
 
@@ -111,7 +111,8 @@ export function AutoSummaryCard() {
   const tone = issueTone(insight.issueType);
 
   return (
-    <section className={["insights-feed-card animate-rise rounded-3xl p-6 md:p-8", tone.cardClass].join(" ")}>
+    <section className={["insights-feed-card insights-card-indicator animate-rise rounded-3xl p-6 md:p-8", tone.cardClass].join(" ")}>
+      <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">FlowSense - Decision Output</p>
       <h2 className={["text-balance text-3xl leading-tight font-bold tracking-tight md:text-5xl", tone.headlineClass].join(" ")}>
         {loading ? "Finding your biggest conversion issue..." : insight.headline}
       </h2>

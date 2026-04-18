@@ -56,7 +56,7 @@ function getTopDropoff(flow: Flow) {
 function getOptimizationSuggestion(flow: Flow): string {
   const topDrop = getTopDropoff(flow);
   if (!topDrop || topDrop.drop < WARNING_DROPOFF_THRESHOLD || !topDrop.previousLabel) {
-    return "Keep this flow stable by preserving momentum and removing any new optional friction before users continue.";
+    return "Preserve momentum in this modeled path and remove any new optional friction before the next step.";
   }
 
   const fromLabel = topDrop.previousLabel;
@@ -65,14 +65,14 @@ function getOptimizationSuggestion(flow: Flow): string {
   const toKey = toLabel.toLowerCase();
 
   if (toKey.includes("checkout") || toKey.includes("payment") || toKey.includes("purchase")) {
-    return `Reduce friction between ${fromLabel} and ${toLabel} by shortening payment steps and tightening trust messaging before users continue.`;
+    return `Reduce friction between ${fromLabel} and ${toLabel} by shortening payment inputs and tightening trust messaging before continuation.`;
   }
 
   if (fromKey.includes("pricing") || toKey.includes("pricing")) {
     return `Reduce friction between ${fromLabel} and ${toLabel} by clarifying plan differences and strengthening one primary CTA.`;
   }
 
-  return `Reduce friction between ${fromLabel} and ${toLabel} by removing unnecessary decisions before users move forward.`;
+  return `Reduce friction between ${fromLabel} and ${toLabel} by removing non-essential decisions before users move forward.`;
 }
 
 function getFlowSummary(flow: Flow): string {
@@ -81,7 +81,7 @@ function getFlowSummary(flow: Flow): string {
     return "Biggest issue: This flow is stable with no major abandonment points.";
   }
 
-  return `Biggest issue: Users drop off between ${topDrop.previousLabel} and ${topDrop.stage.label} (${topDrop.drop.toFixed(0)}%).`;
+  return `Modeled risk: users drop off between ${topDrop.previousLabel} and ${topDrop.stage.label} (${topDrop.drop.toFixed(0)}%).`;
 }
 
 function StageCard({
@@ -114,7 +114,7 @@ function StageCard({
 
   return (
     <div className="flex items-center gap-2">
-      <article className={["w-52 rounded-2xl border px-3 py-3", toneClass].join(" ")} title={tooltip}>
+      <article className={["insights-module-card w-52 rounded-2xl px-3 py-3", toneClass].join(" ")} title={tooltip}>
         {stage.status ? (
           <span
             className={[
@@ -151,10 +151,10 @@ function StageCard({
       </article>
 
       {showSeverityLabel && stage.drop !== undefined ? (
-        <p className={severity === "critical" ? "whitespace-nowrap text-sm font-semibold text-red-300" : "whitespace-nowrap text-sm font-semibold text-orange-400"}>
-          {severity === "critical" ? "CRITICAL:" : "WARNING:"} {stage.drop.toFixed(0)}% of users abandon here
-          {priorLabel ? ` (${priorLabel} -> ${stage.label})` : ""}
-        </p>
+          <p className={severity === "critical" ? "whitespace-nowrap text-sm font-semibold text-red-300" : "whitespace-nowrap text-sm font-semibold text-orange-300"}>
+            {severity === "critical" ? "CRITICAL:" : "WARNING:"} {stage.drop.toFixed(0)}% of users abandon here
+            {priorLabel ? ` (${priorLabel} -> ${stage.label})` : ""}
+          </p>
       ) : null}
       {!isLast ? <span className="text-slate-600">-&gt;</span> : null}
     </div>
@@ -205,48 +205,64 @@ export default function FlowsPage() {
   }, [data]);
 
   return (
-    <div className="space-y-7">
-      <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-5xl font-semibold tracking-tight text-slate-100">Conversion Flows</h1>
-          <p className="mt-2 text-2xl text-slate-400">See where users abandon and what to optimize first</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="rounded-lg border border-slate-700 px-4 py-2 text-base font-semibold text-slate-100">Filter</button>
-          <button className="rounded-lg border border-slate-700 px-4 py-2 text-base font-semibold text-slate-100">Export</button>
-          <button className="rounded-lg bg-slate-100 px-4 py-2 text-base font-semibold text-black">+ New Flow</button>
+    <div className="space-y-8">
+      <section className="insights-module-card insights-card-indicator animate-rise rounded-3xl p-6 md:p-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="insights-module-header">
+            <p className="insights-module-label">FLOWSENSE - FLOW MODELING</p>
+            <h1 className="insights-module-title">Conversion Flows</h1>
+            <p className="insights-module-support">See where users abandon and what to optimize first.</p>
+            <div className="insights-signal-bars w-24">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="insights-btn-secondary">Filter</button>
+            <button className="insights-btn-secondary">Export</button>
+            <button className="insights-btn">+ New Flow</button>
+          </div>
         </div>
       </section>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <article className="insights-surface rounded-2xl px-5 py-4">
-          <p className="text-sm text-slate-400">Active Flows</p>
+        <article className="insights-metric-card insights-card-indicator rounded-2xl px-5 py-4">
+          <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Active Flows</p>
           <p className="mt-1 text-4xl font-semibold tracking-tight text-slate-100">
             {data ? data.metrics.activeFlows.toLocaleString() : loading ? "..." : "0"}
           </p>
+          <p className="mt-1 text-xs text-slate-400">Distinct modeled path sets</p>
         </article>
-        <article className="insights-surface rounded-2xl px-5 py-4">
-          <p className="text-sm text-slate-400">Avg. Completion</p>
+        <article className="insights-metric-card insights-card-indicator rounded-2xl px-5 py-4">
+          <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Avg. Completion</p>
           <p className="mt-1 text-4xl font-semibold tracking-tight text-slate-100">
             {data ? `${data.metrics.avgCompletion.toFixed(1)}%` : loading ? "..." : "0.0%"}
           </p>
+          <p className="mt-1 text-xs text-slate-400">Modeled entry-to-end progression</p>
         </article>
-        <article className="insights-surface rounded-2xl px-5 py-4">
-          <p className="text-sm text-slate-400">Biggest Drop-off Point</p>
+        <article className="insights-metric-card insights-card-indicator rounded-2xl px-5 py-4">
+          <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Biggest Drop-off</p>
           <p className="mt-1 text-4xl font-semibold tracking-tight text-slate-100">
             {data ? `${biggestDropoffPoint.toFixed(1)}%` : loading ? "..." : "0.0%"}
           </p>
+          <p className="mt-1 text-xs text-slate-400">Highest abandon point by stage</p>
         </article>
-        <article className="insights-surface rounded-2xl px-5 py-4">
-          <p className="text-sm text-slate-400">Conversion Rate</p>
+        <article className="insights-metric-card insights-card-indicator rounded-2xl px-5 py-4">
+          <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Conversion Rate</p>
           <p className="mt-1 text-4xl font-semibold tracking-tight text-slate-100">
             {data ? `${data.metrics.conversionRate.toFixed(1)}%` : loading ? "..." : "0.0%"}
           </p>
+          <p className="mt-1 text-xs text-slate-400">System conversion baseline</p>
         </article>
       </section>
 
       <section className="flex items-center justify-between">
-        <h2 className="text-4xl font-semibold tracking-tight text-slate-100">Critical Paths</h2>
+        <div>
+          <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">FLOWSENSE - MODELED PATHS</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-100">Modeled Paths</h2>
+        </div>
         <span className="rounded-full bg-slate-900 px-3 py-1 text-sm text-slate-300">
           {data ? `${data.flows.length} flows` : "..."}
         </span>
@@ -263,7 +279,8 @@ export default function FlowsPage() {
               const highestDropIndex = topDrop?.index ?? -1;
 
               return (
-                <article key={flow.name} className="insights-surface rounded-2xl p-5">
+                <article key={flow.name} className="insights-module-card insights-card-indicator rounded-2xl p-5">
+                  <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Modeled Path</p>
                   <h3 className="text-3xl font-semibold tracking-tight text-slate-100">{flow.name}</h3>
                   <p className="mt-2 text-sm text-slate-200">{getFlowSummary(flow)}</p>
                   <div className="custom-scroll-x mt-4 overflow-x-auto pb-2">
@@ -279,8 +296,8 @@ export default function FlowsPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="mt-4 rounded-xl border border-slate-700/80 bg-black/30 p-3">
-                    <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Optimization suggestion</p>
+                  <div className="insights-system-card mt-4 rounded-xl p-3">
+                    <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Optimization Direction</p>
                     <p className="mt-1 text-sm text-slate-200">{getOptimizationSuggestion(flow)}</p>
                   </div>
                 </article>

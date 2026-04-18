@@ -248,9 +248,10 @@ export function ApiKeysManager() {
   const fullSnippet = `${installSnippet}\n<script>\n  ${initSnippet.replace(/\n/g, "\n  ")}\n\n  ${trackSnippet}\n</script>`;
 
   return (
-    <div className="space-y-4">
-      <section className="insights-surface animate-rise rounded-3xl p-5 md:p-6">
-        <h2 className="text-lg font-semibold text-slate-100">Create Data Connection Key</h2>
+    <div className="space-y-5">
+      <section className="insights-system-card insights-card-indicator animate-rise rounded-3xl p-5 md:p-6">
+        <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">System Ingestion</p>
+        <h2 className="mt-1 text-lg font-semibold text-slate-100">Create Access Key</h2>
         <p className="mt-1 text-sm text-slate-300">
           Generate secure keys to connect your product events to FlowSense.
         </p>
@@ -268,15 +269,16 @@ export function ApiKeysManager() {
               placeholder="Production key"
             />
           </label>
-          <button className="insights-btn w-full sm:w-auto" type="submit" disabled={isCreating}>
+          <button className="insights-btn w-auto" type="submit" disabled={isCreating}>
             {isCreating ? "Generating..." : "Generate Key"}
           </button>
         </form>
       </section>
 
       {lastCreatedKey && (
-        <section className="insights-surface animate-rise rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-5 md:p-6">
-          <h3 className="text-base font-semibold text-slate-100">API key created successfully</h3>
+        <section className="insights-system-card animate-rise rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-5 md:p-6">
+          <p className="text-xs font-semibold tracking-[0.14em] text-emerald-200 uppercase">Access Output</p>
+          <h3 className="mt-1 text-base font-semibold text-slate-100">API key created successfully</h3>
           <p className="mt-1 text-sm text-slate-300">
             Store this securely. This full key will not be shown again.
           </p>
@@ -286,16 +288,17 @@ export function ApiKeysManager() {
           <button
             type="button"
             onClick={() => copyValue(lastCreatedKey.key, "created-key")}
-            className="mt-3 rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
+            className="insights-btn-inline mt-3"
           >
             {copiedToken === "created-key" ? "Copied" : "Copy key"}
           </button>
         </section>
       )}
 
-      <section className="insights-surface animate-rise overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
+      <section className="insights-table-shell animate-rise overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
         <div className="border-b border-slate-700/80 px-5 py-4 md:px-6">
-          <h3 className="text-lg font-semibold text-slate-100">Connection Key Registry</h3>
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">System Registry</p>
+          <h3 className="text-lg font-semibold text-slate-100">Access Registry</h3>
           <p className="text-sm text-slate-300">
             Manage credentials used by your event pipelines.
           </p>
@@ -333,15 +336,15 @@ export function ApiKeysManager() {
                 {keys.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-slate-800/70 last:border-b-0"
+                    className="insights-table-row last:border-b-0"
                   >
-                    <td className="px-5 py-3 font-semibold text-slate-100 md:px-6">
+                    <td className="px-5 py-4 font-semibold text-slate-100 md:px-6">
                       {item.label}
                     </td>
-                    <td className="px-5 py-3 font-mono text-sm text-slate-300 md:px-6">
+                    <td className="px-5 py-4 font-mono text-sm text-slate-300 md:px-6">
                       {item.maskedKey}
                     </td>
-                    <td className="px-5 py-3 text-sm md:px-6">
+                    <td className="px-5 py-4 text-sm md:px-6">
                       <span
                         className={
                           item.revokedAt
@@ -352,10 +355,10 @@ export function ApiKeysManager() {
                         {item.revokedAt ? "Revoked" : "Active"}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm text-slate-300 md:px-6">
+                    <td className="px-5 py-4 text-sm text-slate-300 md:px-6">
                       {formatDate(item.createdAt)}
                     </td>
-                    <td className="px-5 py-3 md:px-6">
+                    <td className="px-5 py-4 md:px-6">
                       {item.revokedAt ? (
                         <span className="text-xs font-semibold text-slate-400">Unavailable</span>
                       ) : (
@@ -372,7 +375,7 @@ export function ApiKeysManager() {
                                 setMessage("Copied masked key. Create a new key to copy full value.");
                               }
                             }}
-                            className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
+                            className="insights-btn-inline"
                           >
                             {copiedToken === `copy-row-${item.id}` ? "Copied" : "Copy"}
                           </button>
@@ -386,7 +389,7 @@ export function ApiKeysManager() {
                               void sendTestEvent(lastCreatedKey.key, `send-test-${item.id}`);
                             }}
                             disabled={sendingTestToken === `send-test-${item.id}`}
-                            className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="insights-btn-inline disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {sendingTestToken === `send-test-${item.id}` ? "Sending..." : "Send Test"}
                           </button>
@@ -394,7 +397,7 @@ export function ApiKeysManager() {
                             type="button"
                             onClick={() => revokeKey(item.id)}
                             disabled={revokingId === item.id}
-                            className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="insights-btn-inline disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {revokingId === item.id ? "Revoking..." : "Revoke"}
                           </button>
@@ -409,8 +412,9 @@ export function ApiKeysManager() {
         )}
       </section>
 
-      <section className="insights-surface animate-rise rounded-3xl p-5 md:p-6" style={{ animationDelay: "120ms" }}>
-        <h3 className="text-lg font-semibold text-slate-100">Developer Quickstart</h3>
+      <section className="insights-system-card insights-card-indicator animate-rise rounded-3xl p-5 md:p-6" style={{ animationDelay: "120ms" }}>
+        <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">System Module</p>
+        <h3 className="text-lg font-semibold text-slate-100">SDK Initialization Module</h3>
         <p className="mt-1 text-sm text-slate-300">
           Start tracking and uncover conversion issues in minutes.
         </p>
@@ -428,7 +432,7 @@ export function ApiKeysManager() {
               <button
                 type="button"
                 onClick={() => copyValue(installSnippet, "copy-install")}
-                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
+                className="insights-btn-inline"
               >
                 {copiedToken === "copy-install" ? "Copied" : "Copy"}
               </button>
@@ -444,7 +448,7 @@ export function ApiKeysManager() {
               <button
                 type="button"
                 onClick={() => copyValue(initSnippet, "copy-init")}
-                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
+                className="insights-btn-inline"
               >
                 {copiedToken === "copy-init" ? "Copied" : "Copy"}
               </button>
@@ -460,7 +464,7 @@ export function ApiKeysManager() {
               <button
                 type="button"
                 onClick={() => copyValue(trackSnippet, "copy-track")}
-                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
+                className="insights-btn-inline"
               >
                 {copiedToken === "copy-track" ? "Copied" : "Copy"}
               </button>
@@ -476,7 +480,7 @@ export function ApiKeysManager() {
               <button
                 type="button"
                 onClick={() => copyValue(fullSnippet, "copy-full")}
-                className="rounded-lg border border-slate-600/80 bg-black/40 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-black/55"
+                className="insights-btn-inline"
               >
                 {copiedToken === "copy-full" ? "Copied" : "Copy"}
               </button>
@@ -497,13 +501,13 @@ export function ApiKeysManager() {
                 void sendTestEvent(lastCreatedKey.key, "send-test-quickstart");
               }}
               disabled={sendingTestToken === "send-test-quickstart"}
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              className="insights-btn-inline disabled:cursor-not-allowed disabled:opacity-60"
             >
               {sendingTestToken === "send-test-quickstart" ? "Sending..." : "Send Test Event"}
             </button>
             <a
               href="/dashboard"
-              className="text-xs font-semibold text-slate-300 underline decoration-dotted underline-offset-4 transition hover:text-slate-100"
+              className="insights-btn-ghost text-xs underline decoration-dotted underline-offset-4"
             >
               View this event in your dashboard
             </a>

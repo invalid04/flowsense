@@ -28,8 +28,9 @@ export function TrackForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="insights-surface flex h-full flex-col space-y-4 rounded-2xl p-5 md:p-6">
+    <form onSubmit={handleSubmit} className="insights-system-card insights-console-module insights-card-indicator flex h-full flex-col space-y-4 rounded-2xl p-5 md:p-6">
       <div>
+        <p className="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Behavior Signals</p>
         <h3 className="text-base font-semibold text-slate-100">Track Transition Event</h3>
         <p className="text-sm text-slate-400">Append a new state jump to your active sequence.</p>
       </div>
@@ -38,7 +39,7 @@ export function TrackForm() {
         <label className="field">
           <span className="field-label text-slate-400">Session Key</span>
           <input
-            className="insights-input"
+            className="insights-input-console"
             value={sessionKey}
             onChange={(e) => setSessionKey(e.target.value)}
             placeholder="session-1"
@@ -48,7 +49,7 @@ export function TrackForm() {
         <label className="field">
           <span className="field-label text-slate-400">From State</span>
           <input
-            className="insights-input"
+            className="insights-input-console"
             value={fromState}
             onChange={(e) => setFromState(e.target.value)}
             placeholder="/home"
@@ -58,7 +59,7 @@ export function TrackForm() {
         <label className="field">
           <span className="field-label text-slate-400">To State</span>
           <input
-            className="insights-input"
+            className="insights-input-console"
             value={toState}
             onChange={(e) => setToState(e.target.value)}
             placeholder="/dashboard"
@@ -66,7 +67,7 @@ export function TrackForm() {
         </label>
       </div>
 
-      <button type="submit" className="insights-btn mt-auto w-full md:w-auto" disabled={loading}>
+      <button type="submit" className="insights-btn mt-auto w-auto self-start" disabled={loading}>
         {loading ? "Tracking..." : "Commit Transition"}
       </button>
     </form>
