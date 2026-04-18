@@ -21,6 +21,8 @@ type EventRow = {
   delta: string;
   deltaTone: "up" | "down" | "neutral";
   lastTriggered: string;
+  meaning: string;
+  tags: string[];
 };
 
 type EventsResponse = {
@@ -60,7 +62,7 @@ export default function EventsPage() {
       }
     };
 
-    load();
+    void load();
   }, []);
 
   const filteredRows = useMemo(() => {
@@ -69,7 +71,10 @@ export default function EventsPage() {
 
     const needle = search.toLowerCase();
     return data.rows.filter(
-      (row) => row.name.toLowerCase().includes(needle) || row.type.toLowerCase().includes(needle)
+      (row) =>
+        row.name.toLowerCase().includes(needle) ||
+        row.type.toLowerCase().includes(needle) ||
+        row.meaning.toLowerCase().includes(needle)
     );
   }, [data, search]);
 
@@ -77,8 +82,8 @@ export default function EventsPage() {
     <div className="space-y-7">
       <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-5xl font-semibold tracking-tight text-slate-100">Events</h1>
-          <p className="mt-2 text-2xl text-slate-400">Monitor all user interactions across your application</p>
+          <h1 className="text-5xl font-semibold tracking-tight text-slate-100">Journey Events</h1>
+          <p className="mt-2 text-2xl text-slate-400">Event data with conversion meaning, not just telemetry</p>
         </div>
         <div className="flex items-center gap-2">
           <button className="rounded-lg border border-slate-700 bg-transparent px-4 py-2 text-base font-semibold text-slate-100">
@@ -144,8 +149,9 @@ export default function EventsPage() {
       </section>
 
       <section className="insights-surface overflow-hidden rounded-2xl">
-        <div className="grid grid-cols-[minmax(0,1fr)_9rem_8rem] border-b border-slate-800 px-4 py-3 text-sm text-slate-500">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_8rem_8rem] border-b border-slate-800 px-4 py-3 text-sm text-slate-500">
           <p>Event Name</p>
+          <p>Business Meaning</p>
           <p className="text-right">Count (7d)</p>
           <p className="text-right">Last Triggered</p>
         </div>
@@ -160,12 +166,24 @@ export default function EventsPage() {
               filteredRows.map((event) => (
                 <article
                   key={`${event.name}-${event.type}`}
-                  className="grid grid-cols-[minmax(0,1fr)_9rem_8rem] items-start px-4 py-3 text-base"
+                  className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_8rem_8rem] items-start border-b border-slate-800/70 px-4 py-3 text-base last:border-b-0"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-slate-100">{event.name}</p>
                     <p className="text-sm text-slate-500">{event.type}</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {event.tags.map((tag) => (
+                        <span key={`${event.name}-${tag}`} className="rounded-full border border-slate-600 bg-slate-900 px-2 py-0.5 text-xs text-slate-300">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
+
+                  <div className="pr-4 text-sm text-slate-300">
+                    <p>{event.meaning}</p>
+                  </div>
+
                   <div className="text-right">
                     <p className="font-semibold text-slate-100">{event.count.toLocaleString()}</p>
                     <p

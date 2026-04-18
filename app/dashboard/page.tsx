@@ -17,6 +17,8 @@ import { alias } from "drizzle-orm/pg-core";
 import { getOrCreateAccount } from "@/lib/getOrCreateAccount";
 import { resolveConversionStatesForAccount } from "@/lib/resolveConversionStatesForAccount";
 
+type ImpactLevel = "high" | "medium" | "low";
+
 type ConversionEndedReason =
   | "reached_conversion_state"
   | "no_outgoing_transitions"
@@ -360,6 +362,23 @@ function toReadableStateLabel(state: string): string {
   return leaf.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function getImpactLevel(score: number): ImpactLevel {
+  if (score >= 55) return "high";
+  if (score >= 30) return "medium";
+  return "low";
+}
+
+function getFunnelPositionScore(stepName: string | null): number {
+  if (!stepName) return 8;
+  const key = stepName.toLowerCase();
+
+  if (key.includes("checkout") || key.includes("payment") || key.includes("purchase")) return 24;
+  if (key.includes("pricing") || key.includes("signup") || key.includes("cart")) return 18;
+  if (key.includes("product") || key.includes("plan")) return 12;
+
+  return 8;
+}
+
 async function getDatasetStatus(accountId: string): Promise<DatasetStatus> {
   const [sessionTotals, rowTotals, lastUpdated] = await Promise.all([
     db
@@ -436,17 +455,59 @@ export default async function HomePage() {
         ? toReadableStateLabel(topLoop.states[0])
         : null;
 
+  const dropoffShare =
+    biggestDropoff && totalTransitions > 0 ? (biggestDropoff.incomingCount / totalTransitions) * 100 : 0;
+  const dropoffScore = biggestDropoff
+    ? dropoffShare * 1.2 + getFunnelPositionScore(biggestDropoff.stateName)
+    : 0;
+  const dropoffImpactLevel = getImpactLevel(dropoffScore);
+
+  const loopShare = topLoop && totalTransitions > 0 ? (topLoop.totalCount / totalTransitions) * 100 : 0;
+  const loopScore = topLoop ? loopShare * 1.1 + Math.min(20, topLoop.totalCount / 15) : 0;
+  const loopImpactLevel = getImpactLevel(loopScore);
+
+  const pathDepth = conversionPathInsight?.path.length ?? 0;
+  const conversionPathScore = conversionPathInsight
+    ? (conversionPathInsight.endedReason === "reached_conversion_state" ? 36 : 24) +
+      Math.min(20, pathDepth * 3)
+    : 0;
+  const conversionPathImpactLevel = getImpactLevel(conversionPathScore);
+
   const priorityActions = [
-    dropoffStepLabel
-      ? `Simplify the ${dropoffStepLabel.toLowerCase()} flow to reduce friction.`
-      : "Review onboarding and checkout steps to keep users moving forward.",
-    loopStatesLabel
-      ? `Clarify the difference between ${loopStatesLabel} so users can decide faster.`
-      : "Strengthen decision cues between related pages to prevent back-and-forth behavior.",
-    conversionPathInsight
-      ? "Promote your strongest conversion journey earlier in onboarding and navigation."
-      : "Collect a little more behavior data to confirm the best conversion path.",
-  ];
+    {
+      title: "Fix checkout abandonment first",
+      impact: dropoffImpactLevel,
+      score: dropoffScore,
+      detail: dropoffStepLabel
+        ? `${dropoffShare.toFixed(1)}% of modeled traffic exits at ${dropoffStepLabel}.`
+        : "Collect more transition data to confirm your primary exit point.",
+      action: dropoffStepLabel
+        ? `Shorten the ${dropoffStepLabel.toLowerCase()} step and remove non-essential friction.`
+        : "Increase tracked sessions and re-check drop-off hotspots.",
+    },
+    {
+      title: "Reduce hesitation loops",
+      impact: loopImpactLevel,
+      score: loopScore,
+      detail: loopStatesLabel
+        ? `${loopShare.toFixed(1)}% of transitions loop between ${loopStatesLabel}.`
+        : "No significant loop is currently detected.",
+      action: loopStatesLabel
+        ? `Clarify the difference between ${loopStatesLabel} and tighten CTAs.`
+        : "Monitor new feature rollouts for emerging loop behavior.",
+    },
+    {
+      title: "Scale your best conversion path",
+      impact: conversionPathImpactLevel,
+      score: conversionPathScore,
+      detail: conversionPathInsight
+        ? `Winning path currently has ${conversionPathInsight.path.length} steps from entry to conversion.`
+        : "Top conversion path is not stable yet.",
+      action: conversionPathInsight
+        ? "Drive more users into this path with stronger in-product entry points."
+        : "Route more traffic through one core onboarding path to build signal.",
+    },
+  ].sort((a, b) => b.score - a.score);
 
   return (
     <div className="w-full space-y-8">
@@ -456,9 +517,9 @@ export default async function HomePage() {
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="space-y-3">
             <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">FlowSense</p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-50 md:text-5xl">Insights</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-50 md:text-5xl">Growth Opportunities</h1>
             <p className="max-w-2xl text-sm leading-relaxed text-slate-200 md:text-base">
-              Open this page and know what is happening, why it matters, and what to do next.
+              Understand where users drop off and get clear actions to increase conversions.
             </p>
           </div>
 
@@ -473,40 +534,68 @@ export default async function HomePage() {
       </section>
 
       <section className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.14em] text-rose-300 uppercase">Section 1</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-100">What to Fix First</h2>
+          <p className="mt-1 text-sm text-slate-300">Priority-ranked actions based on impact score.</p>
+        </div>
+
+        <article className="insights-feed-card animate-rise p-6 md:p-7" style={{ animationDelay: "100ms" }}>
+          <ul className="space-y-4 text-sm">
+            {priorityActions.map((action, index) => (
+              <li key={action.title} className="rounded-xl border border-slate-700/80 bg-black/30 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-base font-semibold text-slate-100">
+                    {index + 1}. {action.title}
+                  </p>
+                  <span className="rounded-full border border-slate-500/60 bg-slate-500/15 px-2 py-0.5 text-[11px] font-semibold text-slate-200 uppercase">
+                    {action.impact} impact
+                  </span>
+                </div>
+                <p className="mt-2 text-slate-200">{action.detail}</p>
+                <p className="mt-1 text-slate-300">Action: {action.action}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 border-t border-slate-600 pt-4 text-xs text-slate-300">
+            Impact score inputs: drop-off %, traffic volume, and funnel position.
+          </div>
+        </article>
+      </section>
+
+      <section className="space-y-4">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 1</p>
+            <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 2</p>
             <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Insights Feed</h2>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <DropoffInsightCard biggestDropoff={biggestDropoff} totalTransitions={totalTransitions} />
-          <LoopInsightCard topLoop={topLoop} error={loopInsightError} totalTransitions={totalTransitions} />
-          <ConversionPathInsightCard insight={conversionPathInsight} error={conversionPathError} />
-
-          <article className="insights-feed-card animate-rise p-6 md:p-7 md:col-span-2 xl:col-span-3" style={{ animationDelay: "120ms" }}>
-            <p className="text-xs font-semibold tracking-[0.14em] text-cyan-300 uppercase">What To Do Next</p>
-            <p className="mt-3 text-2xl leading-tight font-bold tracking-tight text-cyan-100 md:text-[2rem]">
-              Recommended actions
-            </p>
-            <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-300">
-              {priorityActions.map((action) => (
-                <li key={action}>- {action}</li>
-              ))}
-            </ul>
-            <div className="mt-5 border-t border-slate-600 pt-4 text-xs text-slate-300">
-              States mapped: {uniqueStates.toLocaleString()} | Transitions: {totalTransitions.toLocaleString()}
-            </div>
-          </article>
+          <DropoffInsightCard
+            biggestDropoff={biggestDropoff}
+            totalTransitions={totalTransitions}
+            impactLevel={dropoffImpactLevel}
+          />
+          <LoopInsightCard
+            topLoop={topLoop}
+            error={loopInsightError}
+            totalTransitions={totalTransitions}
+            impactLevel={loopImpactLevel}
+          />
+          <ConversionPathInsightCard
+            insight={conversionPathInsight}
+            error={conversionPathError}
+            impactLevel={conversionPathImpactLevel}
+          />
         </div>
       </section>
 
-      <section id="supporting-data" className="mt-14 space-y-4 opacity-80">
+      <section id="supporting-data" className="mt-14 space-y-4 opacity-85">
         <div>
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Section 2</p>
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Section 3</p>
           <h2 className="text-xl font-medium tracking-tight text-slate-300">Supporting Data</h2>
-          <p className="mt-1 text-sm text-slate-400">Raw data below supports the insight conclusions above.</p>
+          <p className="mt-1 text-sm text-slate-400">Raw transition data backing each recommendation.</p>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -514,7 +603,7 @@ export default async function HomePage() {
             <StateTransitionsChart />
           </div>
           <div className="insights-surface animate-rise rounded-2xl p-5 md:p-6" style={{ animationDelay: "210ms" }}>
-            <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Model Snapshot</p>
+            <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Behavior Engine Snapshot</p>
             <p className="mt-3 text-sm text-slate-300">
               {topTransition
                 ? `Highest-volume edge: ${topTransition.fromState} -> ${topTransition.toState} (${topTransition.count.toLocaleString()} transitions)`
@@ -528,7 +617,7 @@ export default async function HomePage() {
         <div className="insights-surface animate-rise overflow-hidden rounded-2xl" style={{ animationDelay: "240ms" }}>
           <div className="border-b border-slate-700/80 px-5 py-4 md:px-6">
             <h3 className="text-sm font-semibold text-slate-300">Transition Table</h3>
-            <p className="text-sm text-slate-400">Detailed edges powering your current insight feed.</p>
+            <p className="text-sm text-slate-400">Detailed edges powering your current recommendations.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
@@ -570,7 +659,7 @@ export default async function HomePage() {
 
       <section className="space-y-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 3</p>
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase">Section 4</p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Deep Dive</h2>
           <p className="mt-1 text-sm text-slate-200">Optional controls for advanced analysis and data operations.</p>
         </div>
@@ -595,4 +684,3 @@ export default async function HomePage() {
     </div>
   );
 }
-

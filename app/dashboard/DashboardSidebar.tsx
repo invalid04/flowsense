@@ -12,7 +12,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     href: "/dashboard",
-    label: "Insights",
+    label: "Growth Opportunities",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
   },
   {
     href: "/dashboard/api-keys",
-    label: "API Keys",
+    label: "Connect Data",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -65,7 +65,7 @@ export function DashboardSidebar() {
         <p className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
           FlowSense Workspace
         </p>
-        <p className="mt-2 text-lg font-semibold text-slate-100">Insights</p>
+        <p className="mt-2 text-lg font-semibold text-slate-100">Growth Opportunities</p>
       </div>
 
       <nav className="flex flex-col gap-2">

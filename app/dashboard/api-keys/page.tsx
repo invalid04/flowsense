@@ -5,13 +5,13 @@ export default function ApiKeysPage() {
     <div className="space-y-4">
       <section className="insights-surface animate-rise rounded-3xl p-6 md:p-8">
         <p className="text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">
-          Developer Access
+          Product Data Connection
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-100 md:text-4xl">
-          API Key Management
+          Connect Your Product Data
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-          Create and manage API credentials for secure ingestion and integration workflows.
+          Create and manage ingestion credentials so FlowSense can analyze your journeys and surface growth actions.
         </p>
       </section>
 

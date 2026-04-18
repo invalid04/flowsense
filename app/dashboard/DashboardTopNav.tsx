@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/dashboard", label: "Insights" },
-  { href: "/dashboard/flows", label: "Flows" },
-  { href: "/dashboard/events", label: "Events" },
-  { href: "/dashboard/api-keys", label: "API" },
+  { href: "/dashboard", label: "Growth Opportunities" },
+  { href: "/dashboard/flows", label: "Conversion Flows" },
+  { href: "/dashboard/events", label: "Journey Events" },
+  { href: "/dashboard/api-keys", label: "Connect Data" },
 ];
 
 export function DashboardTopNav() {

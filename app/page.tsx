@@ -3,47 +3,53 @@ import { auth } from "@clerk/nextjs/server";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
 const SIGNAL_METRICS = [
-  { label: "Tracked Events", value: "12.4M", detail: "Last 30 days" },
-  { label: "Transition States", value: "1,284", detail: "Active model nodes" },
-  { label: "Prediction Accuracy", value: "89.2%", detail: "Top-3 outcomes" },
+  { label: "Conversion Rate", value: "17.4%", detail: "Across tracked funnels" },
+  { label: "Drop-off Risk", value: "28.6%", detail: "Highest-risk step" },
+  { label: "Biggest Opportunity", value: "Checkout", detail: "Largest recoverable loss" },
 ];
 
 const CONTROL_MODULES = [
   {
-    name: "Flow Matrix",
-    description: "Live state transitions rendered as weighted edges across product paths.",
-    status: "Online",
+    name: "Behavior Engine",
+    description: "Markov-based path modeling that isolates where intent weakens.",
+    status: "Live",
   },
   {
-    name: "Drop-Off Radar",
-    description: "Detect where intent collapses and rank breakpoints by impact.",
+    name: "Conversion Risk Radar",
+    description: "Flags the exact handoffs where users abandon before converting.",
     status: "Monitoring",
   },
   {
-    name: "Loop Detector",
-    description: "Surface circular behavior and identify hesitation patterns.",
-    status: "Sampling",
+    name: "Top Growth Actions",
+    description: "Turns journey friction into prioritized, fix-first recommendations.",
+    status: "Ready",
   },
   {
-    name: "Prediction Engine",
-    description: "Estimate the next likely state from any current session position.",
-    status: "Ready",
+    name: "Opportunity Tracker",
+    description: "Tracks resolved issues and surfaces the next highest-impact fix.",
+    status: "Active",
   },
 ];
 
 const OPERATING_SYSTEM = [
   {
-    title: "Instrument",
-    body: "SDK + API ingestion with account-scoped keys.",
+    title: "Tracking",
+    body: "SDK + API ingestion captures account-scoped user journeys in real time.",
   },
   {
-    title: "Model",
-    body: "Markov transition probabilities built from real user sessions.",
+    title: "Behavior Engine",
+    body: "Transition probabilities map intent decay and conversion momentum.",
   },
   {
-    title: "Decide",
-    body: "Actionable insights for product, engineering, and growth teams.",
+    title: "Recommendations",
+    body: "Action-first guidance ranks what to fix first to lift conversions.",
   },
+];
+
+const PLAN_LIMITS = [
+  "Events per month",
+  "Projects per workspace",
+  "Insights depth and recommendation history",
 ];
 
 export default async function Page() {
@@ -81,17 +87,17 @@ export default async function Page() {
               </span>
               <div>
                 <p className="font-mono text-[0.72rem] tracking-[0.2em] text-slate-400 uppercase">FlowSense</p>
-                <p className="text-sm text-slate-300">Behavior Intelligence Console</p>
+                <p className="text-sm text-slate-300">Growth Intelligence Platform</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-                <a
-                  href="#quickstart"
-                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-600/80 bg-black/30 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-400 hover:text-slate-100"
-                >
-                  API Setup
-                </a>
+              <a
+                href="#quickstart"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-600/80 bg-black/30 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-400 hover:text-slate-100"
+              >
+                Connect Data
+              </a>
               <Link
                 href={dashboardHref}
                 className="inline-flex min-h-10 items-center rounded-lg border border-slate-500/80 bg-slate-100 px-4 text-sm font-semibold text-black transition hover:bg-slate-200"
@@ -104,13 +110,13 @@ export default async function Page() {
 
         <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <article className="insights-shell animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "90ms" }}>
-            <p className="font-mono text-xs tracking-[0.2em] text-slate-300 uppercase">Realtime Behavior OS</p>
+            <p className="font-mono text-xs tracking-[0.2em] text-slate-300 uppercase">Conversion Optimization Engine</p>
             <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-slate-50 md:text-6xl">
-              Product Telemetry That Feels Like an Instrument
+              Find What&apos;s Killing Your Conversions and Fix It
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
-              A modular analytics surface for teams that want to read user movement, detect friction,
-              and steer journeys with clarity.
+              FlowSense analyzes how users move through your product and tells you exactly where they
+              drop off, why it matters, and what to do next.
             </p>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
@@ -125,7 +131,7 @@ export default async function Page() {
           </article>
 
           <article className="insights-shell animate-rise rounded-3xl p-6 md:p-8" style={{ animationDelay: "130ms" }}>
-            <p className="font-mono text-xs tracking-[0.2em] text-slate-300 uppercase">Operating Chain</p>
+            <p className="font-mono text-xs tracking-[0.2em] text-slate-300 uppercase">Decision Layer</p>
             <div className="mt-4 space-y-3">
               {OPERATING_SYSTEM.map((item, index) => (
                 <div key={item.title} className="rounded-xl border border-slate-700/80 bg-black/25 p-4">
@@ -140,8 +146,8 @@ export default async function Page() {
             <div className="mt-4 grid grid-cols-6 gap-2">
               {Array.from({ length: 18 }, (_, index) => (
                 <div
-                    key={`cell-${index}`}
-                    className={`h-5 rounded-sm border ${
+                  key={`cell-${index}`}
+                  className={`h-5 rounded-sm border ${
                     index % 4 === 0
                       ? "border-slate-500/70 bg-slate-400/30"
                       : "border-slate-700/90 bg-slate-900/75"
@@ -179,11 +185,11 @@ export default async function Page() {
             <div className="max-w-2xl">
               <p className="font-mono text-xs tracking-[0.2em] text-slate-400 uppercase">Developer Quickstart</p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
-                Attach FlowSense in under 60 seconds
+                Start tracking and uncover your biggest conversion issues in minutes
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-300">
-                Drop in one script, initialize with your API key, and send live events to your
-                account endpoint.
+                Drop in one script, initialize with your API key, and capture the journeys behind your
+                growth opportunities.
               </p>
               <div className="mt-6">
                 <Link
@@ -199,6 +205,33 @@ export default async function Page() {
               <code>{quickstartSnippet}</code>
             </pre>
           </div>
+        </section>
+
+        <section className="insights-surface animate-rise rounded-3xl border border-slate-700/70 p-6 md:p-8" style={{ animationDelay: "340ms" }}>
+          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
+            <div>
+              <p className="font-mono text-xs tracking-[0.2em] text-slate-400 uppercase">Monetization Ready</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
+                Clear packaging for indie SaaS teams
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Offer a free plan for one project and a paid plan for full insights + predictions.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-700 bg-black/40 px-4 py-3 text-sm text-slate-200">
+              <p className="font-semibold text-slate-100">Example pricing</p>
+              <p className="mt-1">Free: 1 project, limited events</p>
+              <p>$15/mo: full insights + predictions</p>
+            </div>
+          </div>
+
+          <ul className="mt-5 grid gap-2 text-sm text-slate-300 md:grid-cols-3">
+            {PLAN_LIMITS.map((limit) => (
+              <li key={limit} className="rounded-xl border border-slate-700/80 bg-black/30 px-3 py-2">
+                {limit}
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
     </main>

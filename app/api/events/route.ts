@@ -65,7 +65,7 @@ export async function GET() {
 
     const totalSessions = Number(sessionCountRows[0]?.value ?? 0);
 
-    const events = transitionRows
+    const rawEvents = transitionRows
       .map((row) => {
         const count = Number(row.count);
         const type = inferType(row.fromState, row.toState);
@@ -82,6 +82,34 @@ export async function GET() {
         };
       })
       .sort((a, b) => b.count - a.count);
+
+    const maxCount = rawEvents[0]?.count ?? 0;
+
+    const events = rawEvents.map((event) => {
+      const tags: string[] = [];
+
+      if (event.type === "Conversion") tags.push("Conversion-related");
+      if (event.type === "Error" || event.deltaTone === "down") tags.push("Drop-off related");
+      if (maxCount > 0 && event.count / maxCount >= 0.55) tags.push("High frequency");
+
+      let meaning = "This event helps map how users navigate your product.";
+
+      if (event.type === "Conversion") {
+        meaning = "This event is part of your highest converting path or a conversion-intent transition.";
+      } else if (event.type === "Error") {
+        meaning = "This event likely contributes to abandonment and should be monitored closely.";
+      } else if (event.deltaTone === "down") {
+        meaning = "This event appears in a declining pattern and may signal conversion friction.";
+      } else if (tags.includes("High frequency")) {
+        meaning = "This event is high volume and strongly influences overall funnel performance.";
+      }
+
+      return {
+        ...event,
+        meaning,
+        tags,
+      };
+    });
 
     const totalEvents = events.reduce((sum, item) => sum + item.count, 0);
     const errorEvents = events

@@ -1,3 +1,5 @@
+type ImpactLevel = "high" | "medium" | "low";
+
 type LoopInsight = {
   type: "two-state" | "self";
   states: string[];
@@ -8,6 +10,7 @@ type LoopInsightCardProps = {
   topLoop: LoopInsight | null;
   error: string | null;
   totalTransitions: number;
+  impactLevel: ImpactLevel;
 };
 
 function toReadableStateLabel(state: string): string {
@@ -27,16 +30,26 @@ function formatLoopLabel(loop: LoopInsight): string {
   return `${first} <-> ${second}`;
 }
 
-export function LoopInsightCard({ topLoop, error, totalTransitions }: LoopInsightCardProps) {
+function impactBadge(impactLevel: ImpactLevel) {
+  if (impactLevel === "high") {
+    return { label: "High Impact", icon: "??", className: "border-red-300/50 bg-red-500/20 text-red-100" };
+  }
+  if (impactLevel === "medium") {
+    return { label: "Medium Impact", icon: "??", className: "border-amber-300/50 bg-amber-500/20 text-amber-100" };
+  }
+  return { label: "Low Impact", icon: "??", className: "border-emerald-300/50 bg-emerald-500/20 text-emerald-100" };
+}
+
+export function LoopInsightCard({ topLoop, error, totalTransitions, impactLevel }: LoopInsightCardProps) {
+  const impact = impactBadge(impactLevel);
+
   if (error) {
     return (
       <article className="insights-feed-card insights-feed-card--loop animate-rise p-6 md:p-7">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold tracking-[0.04em] text-violet-200">
-            Users are stuck in this loop
-          </p>
-          <span className="rounded-full border border-violet-300/40 bg-violet-500/20 px-2 py-0.5 text-[11px] font-semibold text-violet-100">
-            Medium Impact
+          <p className="text-xs font-semibold tracking-[0.04em] text-violet-200">Problem</p>
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${impact.className}`}>
+            {impact.icon} {impact.label}
           </span>
         </div>
         <p className="mt-4 text-sm text-rose-300">{error}</p>
@@ -48,19 +61,20 @@ export function LoopInsightCard({ topLoop, error, totalTransitions }: LoopInsigh
     return (
       <article className="insights-feed-card insights-feed-card--loop animate-rise p-6 md:p-7">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold tracking-[0.04em] text-violet-200">
-            Users are stuck in this loop
-          </p>
-          <span className="rounded-full border border-violet-300/40 bg-violet-500/20 px-2 py-0.5 text-[11px] font-semibold text-violet-100">
-            Medium Impact
+          <p className="text-xs font-semibold tracking-[0.04em] text-violet-200">Problem</p>
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${impact.className}`}>
+            {impact.icon} {impact.label}
           </span>
         </div>
-        <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-100">
-          No recurring loop detected
+        <p className="mt-3 text-balance text-2xl leading-tight font-bold tracking-tight text-violet-100 md:text-[2rem]">
+          No major hesitation loop detected
         </p>
-        <p className="mt-3 text-sm leading-6 text-slate-300">
-          Journeys are moving forward without obvious repeated loops right now.
-        </p>
+        <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Metric</p>
+        <p className="mt-1 text-sm text-slate-200">Users are progressing without repeat loops in current data.</p>
+        <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Likely Cause</p>
+        <p className="mt-1 text-sm text-slate-300">Decision points are clear enough for forward movement.</p>
+        <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Suggested Fix</p>
+        <p className="mt-1 text-sm text-slate-300">Keep key choices explicit as you add new pages and pricing options.</p>
       </article>
     );
   }
@@ -70,24 +84,31 @@ export function LoopInsightCard({ topLoop, error, totalTransitions }: LoopInsigh
   return (
     <article className="insights-feed-card insights-feed-card--loop animate-rise p-6 md:p-7">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-[0.04em] text-violet-200">
-          Users are stuck in this loop
-        </p>
-        <span className="rounded-full border border-violet-300/40 bg-violet-500/20 px-2 py-0.5 text-[11px] font-semibold text-violet-100">
-          Medium Impact
+        <p className="text-xs font-semibold tracking-[0.04em] text-violet-200">Problem</p>
+        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${impact.className}`}>
+          {impact.icon} {impact.label}
         </span>
       </div>
       <p className="mt-3 text-balance text-2xl leading-tight font-bold tracking-tight text-violet-100 md:text-[2rem]">
-        {formatLoopLabel(topLoop)}
+        Users are getting stuck deciding
       </p>
-      <p className="mt-2 text-lg font-semibold text-violet-200">
-        {loopShare.toFixed(1)}% of users repeat this cycle before moving on
+      <p className="mt-2 text-sm text-slate-200">Loop detected: {formatLoopLabel(topLoop)}</p>
+
+      <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Metric</p>
+      <p className="mt-1 text-sm text-slate-200">
+        {loopShare.toFixed(1)}% of transitions repeat this cycle ({topLoop.totalCount.toLocaleString()} loop events).
       </p>
-      <p className="mt-4 text-sm leading-6 text-slate-300">
-        People are bouncing between these steps instead of deciding. Clarify choices and reduce uncertainty between these pages.
+
+      <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Likely Cause</p>
+      <p className="mt-1 text-sm text-slate-300">Positioning between these steps is ambiguous, so users keep bouncing back.</p>
+
+      <p className="mt-4 text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">Suggested Fix</p>
+      <p className="mt-1 text-sm text-slate-300">
+        Differentiate these screens with clearer CTA hierarchy and explicit next-action messaging.
       </p>
+
       <div className="mt-5 flex items-center justify-between text-xs text-slate-400">
-        <span>Affected users: {topLoop.totalCount.toLocaleString()}</span>
+        <span>Impact driver: repeat behavior at meaningful volume</span>
         <a href="#supporting-data" className="font-semibold text-violet-200 hover:text-violet-100">
           View details
         </a>

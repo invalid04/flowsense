@@ -250,9 +250,9 @@ export function ApiKeysManager() {
   return (
     <div className="space-y-4">
       <section className="insights-surface animate-rise rounded-3xl p-5 md:p-6">
-        <h2 className="text-lg font-semibold text-slate-100">Generate API Key</h2>
+        <h2 className="text-lg font-semibold text-slate-100">Create Data Connection Key</h2>
         <p className="mt-1 text-sm text-slate-300">
-          Create scoped keys for server-to-server event ingestion.
+          Generate secure keys to connect your product events to FlowSense.
         </p>
 
         <form
@@ -295,9 +295,9 @@ export function ApiKeysManager() {
 
       <section className="insights-surface animate-rise overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
         <div className="border-b border-slate-700/80 px-5 py-4 md:px-6">
-          <h3 className="text-lg font-semibold text-slate-100">API Key Registry</h3>
+          <h3 className="text-lg font-semibold text-slate-100">Connection Key Registry</h3>
           <p className="text-sm text-slate-300">
-            Manage credentials used by your integrations.
+            Manage credentials used by your event pipelines.
           </p>
         </div>
 
@@ -412,7 +412,7 @@ export function ApiKeysManager() {
       <section className="insights-surface animate-rise rounded-3xl p-5 md:p-6" style={{ animationDelay: "120ms" }}>
         <h3 className="text-lg font-semibold text-slate-100">Developer Quickstart</h3>
         <p className="mt-1 text-sm text-slate-300">
-          Embed the SDK and initialize it with your API key to begin tracking behavior flows.
+          Start tracking and uncover conversion issues in minutes.
         </p>
 
         {!lastCreatedKey && newestActiveKey && (
