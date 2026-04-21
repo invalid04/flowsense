@@ -17,6 +17,7 @@ export default function SdkTestPage() {
         onLoad={() => {
           try {
             window.FlowSense?.init({
+              apiKey: "fs_live_c4f55a3c6c534f9a939aef22da17b27e",
               endpoint: "http://localhost:4000/track",
               debug: true,
             });

@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { and, eq } from "drizzle-orm";
 import { db, sessions, states, transitions } from "@repo/db";
+import { getAccountIdFromApiKey } from "../lib/getAccountIdFromApiKey";
 
 type TrackBody = {
   sessionKey: string;
@@ -102,11 +103,13 @@ export default async function trackRoute(app: FastifyInstance) {
         });
       }
 
-      const accountId = process.env.SEQUENCE_DEV_ACCOUNT_ID;
+      const accountId = await getAccountIdFromApiKey(
+        request.headers.authorization
+      );
 
       if (!accountId) {
-        return reply.status(500).send({
-          error: "Missing SEQUENCE_DEV_ACCOUNT_ID",
+        return reply.status(401).send({
+          error: "Unauthorized",
         });
       }
 
