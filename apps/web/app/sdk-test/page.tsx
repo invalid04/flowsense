@@ -4,17 +4,10 @@ import Script from "next/script";
 import { useState } from "react";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
-declare global {
-  interface Window {
-    FlowSense?: {
-      init: (config: { apiKey: string; endpoint?: string }) => void;
-      track: (state: string) => Promise<{ message: string }>;
-    };
-  }
-}
-
 export default function SdkTestPage() {
   const [state, setState] = useState("/home");
+  const [fromState, setFromState] = useState("/home");
+  const [toState, setToState] = useState("/pricing");
   const [status, setStatus] = useState("SDK not initialized");
   const baseUrl = getBaseUrl();
 
@@ -26,8 +19,8 @@ export default function SdkTestPage() {
         onLoad={() => {
           try {
             window.FlowSense?.init({
-              apiKey: "test_key_123",
-              endpoint: `${baseUrl}/api/ingest`,
+              endpoint: "http://localhost:4000/track",
+              debug: true,
             });
             setStatus("SDK initialized");
           } catch (error) {
@@ -38,32 +31,77 @@ export default function SdkTestPage() {
         }}
       />
 
-      <div className="mx-auto max-w-xl space-y-4 rounded-2xl border p-6">
+      <div className="mx-auto max-w-xl space-y-6 rounded-2xl border p-6">
         <h1 className="text-2xl font-semibold">FlowSense SDK Test</h1>
         <p className="text-sm text-gray-600">{status}</p>
 
-        <input
-          className="w-full rounded border px-3 py-2"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          placeholder="State"
-        />
+        <div className="space-y-2">
+          <h2 className="text-lg font-medium">Track current state</h2>
+          <input
+            className="w-full rounded border px-3 py-2"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            placeholder="State"
+          />
 
-        <button
-          className="rounded bg-black px-4 py-2 text-white"
-          onClick={async () => {
-            try {
-              const result = await window.FlowSense?.track(state);
-              setStatus(result?.message ?? "Tracked");
-            } catch (error) {
-              setStatus(
-                error instanceof Error ? error.message : "Track failed"
-              );
-            }
-          }}
-        >
-          Track State
-        </button>
+          <button
+            className="rounded bg-black px-4 py-2 text-white"
+            onClick={async () => {
+              try {
+                const result = await window.FlowSense?.track(state);
+                setStatus(result?.message ?? `Tracked state: ${state}`);
+              } catch (error) {
+                setStatus(
+                  error instanceof Error ? error.message : "Track failed"
+                );
+              }
+            }}
+          >
+            Track State
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-medium">Track explicit transition</h2>
+
+          <input
+            className="w-full rounded border px-3 py-2"
+            value={fromState}
+            onChange={(e) => setFromState(e.target.value)}
+            placeholder="From state"
+          />
+
+          <input
+            className="w-full rounded border px-3 py-2"
+            value={toState}
+            onChange={(e) => setToState(e.target.value)}
+            placeholder="To state"
+          />
+
+          <button
+            className="rounded bg-black px-4 py-2 text-white"
+            onClick={async () => {
+              try {
+                const result = await window.FlowSense?.trackTransition?.(
+                  fromState,
+                  toState
+                );
+                setStatus(
+                  result?.message ??
+                    `Tracked transition: ${fromState} -> ${toState}`
+                );
+              } catch (error) {
+                setStatus(
+                  error instanceof Error
+                    ? error.message
+                    : "Transition track failed"
+                );
+              }
+            }}
+          >
+            Track Transition
+          </button>
+        </div>
       </div>
     </main>
   );
