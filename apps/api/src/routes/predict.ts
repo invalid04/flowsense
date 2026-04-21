@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { predictFromCandidates } from "@repo/engine";
 import { db, states, transitions } from "@repo/db";
+import { getAccountIdFromApiKey } from "../lib/getAccountIdFromApiKey";
 
 export default async function predictRoute(app: FastifyInstance) {
   app.get("/", async (request, reply) => {
@@ -15,11 +16,13 @@ export default async function predictRoute(app: FastifyInstance) {
         });
       }
 
-      const accountId = process.env.SEQUENCE_DEV_ACCOUNT_ID;
+      const accountId = await getAccountIdFromApiKey(
+        request.headers.authorization
+      );
 
       if (!accountId) {
-        return reply.status(500).send({
-          error: "Missing SEQUENCE_DEV_ACCOUNT_ID",
+        return reply.status(401).send({
+          error: "Unauthorized",
         });
       }
 
