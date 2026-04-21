@@ -4,15 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "build": "pnpm --filter @repo/db build && pnpm --filter @repo/engine build && tsc -p tsconfig.json",
+    "start": "node dist/apps/api/src/index.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.0",
-    "@neondatabase/serverless": "^1.1.0",
+    "@repo/engine": "workspace:*",
     "@repo/db": "workspace:*",
     "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^0.44.1",
     "fastify": "^5.0.0",
     "zod": "^3.23.8"
   },
