@@ -26,8 +26,19 @@ export type LoopType = "two-state" | "self";
 export type LoopResult = {
     type: LoopType;
     states: string[];
+    totalCount: number;
+};
+
+export type RawTransitionInput = {
+    fromStateId: string;
+    toStateId: string;
     count: number;
 };
+
+export type LoopDetectionResult = {
+    topLoop: LoopResult | null;
+    loops: LoopResult[];
+}
 
 export type DropoffResult = {
     state: string;
