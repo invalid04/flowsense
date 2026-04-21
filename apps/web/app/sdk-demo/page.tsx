@@ -18,7 +18,7 @@ export default function SdkTestPage() {
           try {
             window.FlowSense?.init({
               apiKey: "fs_live_c4f55a3c6c534f9a939aef22da17b27e",
-              endpoint: "http://localhost:4000/track",
+              endpoint: "https://sequence-1-pwbq.onrender.com/track",
               debug: true,
             });
             setStatus("SDK initialized");

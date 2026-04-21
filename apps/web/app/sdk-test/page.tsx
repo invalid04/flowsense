@@ -19,7 +19,7 @@ export default function SdkTestPage() {
         onLoad={() => {
           try {
             window.FlowSense?.init({
-              endpoint: "http://localhost:4000/track",
+              endpoint: "https://sequence-1-pwbq.onrender.com/track",
               debug: true,
             });
             setStatus("SDK initialized");

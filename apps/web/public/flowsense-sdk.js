@@ -13,7 +13,7 @@
       }
 
       this.apiKey = config.apiKey || null;
-      this.endpoint = config.endpoint || "http://localhost:4000/track";
+      this.endpoint = config.endpoint || "https://sequence-1-pwbq.onrender.com/track";
       this.debug = Boolean(config.debug);
 
       const existingSessionKey = window.localStorage.getItem("flowsense_session_key");
