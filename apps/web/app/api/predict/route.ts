@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { predictFromCandidates } from "@repo/engine";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
       .select({
         toStateId: transitions.toStateId,
         toStateName: states.name,
-        count: sql<number>`sum(${transitions.count})`
+        count: sql<number>`sum(${transitions.count})`,
       })
       .from(transitions)
       .innerJoin(states, eq(transitions.toStateId, states.id))
@@ -45,7 +46,14 @@ export async function GET(req: NextRequest) {
       .groupBy(transitions.toStateId, states.name)
       .orderBy(desc(sql<number>`sum(${transitions.count})`));
 
-    if (outgoingTransitions.length === 0) {
+    const result = predictFromCandidates(
+      outgoingTransitions.map((transition) => ({
+        toStateName: transition.toStateName,
+        count: Number(transition.count),
+      }))
+    );
+
+    if (result.prediction === null) {
       return NextResponse.json({
         currentState,
         prediction: null,
@@ -54,18 +62,11 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const total = outgoingTransitions.reduce(
-        (sum, t) => sum + Number(t.count),
-        0
-    )
-    const top = outgoingTransitions[0];
-    const probability = top.count / total;
-
     return NextResponse.json({
       currentState,
-      prediction: top.toStateName,
-      probability,
-      totalTransitions: total,
+      prediction: result.prediction,
+      probability: result.probability,
+      totalTransitions: result.totalTransitions,
     });
   } catch (error) {
     if (error instanceof UnauthorizedError) {

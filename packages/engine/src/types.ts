@@ -21,8 +21,10 @@ export type PredictionResult = {
     totalTransitions: number;
 };
 
+export type LoopType = "two-state" | "self";
+
 export type LoopResult = {
-    type: "self-loop" | "two-state-loop";
+    type: LoopType;
     states: string[];
     count: number;
 };
