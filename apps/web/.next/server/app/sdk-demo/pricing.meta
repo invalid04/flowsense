@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/sdk-demo/layout,_N_T_/sdk-demo/pricing/layout,_N_T_/sdk-demo/pricing/page,_N_T_/sdk-demo/pricing"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/sdk-demo/pricing/__PAGE__",
+    "/sdk-demo/pricing",
+    "/sdk-demo",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -2,34 +2,19 @@
   "name": "markov",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@clerk/nextjs": "^7.2.0",
-    "@neondatabase/serverless": "^1.0.2",
-    "csv-parse": "^6.2.1",
-    "drizzle-orm": "^0.45.2",
-    "ioredis": "^5.10.1",
-    "next": "16.2.2",
-    "node-fetch": "^3.3.2",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "recharts": "^3.8.1"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "start": "turbo run start --filter=web"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "dotenv": "^17.4.0",
-    "drizzle-kit": "^0.31.10",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2",
-    "tailwindcss": "^4",
+    "turbo": "^2.9.6",
     "typescript": "^5"
   }
 }

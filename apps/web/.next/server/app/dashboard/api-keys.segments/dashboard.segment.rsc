@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[12583,["/_next/static/chunks/0x7-nfq66rtod.js","/_next/static/chunks/0-35n1cyizqfc.js","/_next/static/chunks/0bce0dv4o.yci.js","/_next/static/chunks/0xno.rgna7d91.js","/_next/static/chunks/01umnzl7hthud.js"],"DashboardTopNav"]
+3:I[39756,["/_next/static/chunks/0x7-nfq66rtod.js","/_next/static/chunks/0-35n1cyizqfc.js","/_next/static/chunks/0bce0dv4o.yci.js","/_next/static/chunks/0xno.rgna7d91.js"],"default"]
+4:I[37457,["/_next/static/chunks/0x7-nfq66rtod.js","/_next/static/chunks/0-35n1cyizqfc.js","/_next/static/chunks/0bce0dv4o.yci.js","/_next/static/chunks/0xno.rgna7d91.js"],"default"]
+0:{"rsc":["$","$1","c",{"children":[[["$","script","script-0",{"src":"/_next/static/chunks/01umnzl7hthud.js","async":true}]],["$","main",null,{"className":"insights-workspace min-h-screen","children":[["$","$L2",null,{}],["$","section",null,{"className":"mx-auto w-full max-w-[88rem] px-4 py-8 md:px-8 md:py-10","children":["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]}]]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"F_egQ69Tem0NDD8F8nK8A"}
