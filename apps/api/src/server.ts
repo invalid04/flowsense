@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import trackRoute from "./routes/track";
 import predictRoute from "./routes/predict";
+import stateTransitionsRoute from "./routes/state-transition";
 
 export async function buildServer() {
   const app = Fastify({
@@ -18,6 +19,7 @@ export async function buildServer() {
 
   await app.register(trackRoute, { prefix: "/track" });
   await app.register(predictRoute, { prefix: "/predict" });
+  await app.register(stateTransitionsRoute, { prefix: "/state-transitions" });
 
   return app;
 }
