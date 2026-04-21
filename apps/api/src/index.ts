@@ -7,8 +7,6 @@ const envFileCandidates = [
   path.resolve(process.cwd(), ".env.local"),
   path.resolve(process.cwd(), "apps/api/.env"),
   path.resolve(process.cwd(), "apps/api/.env.local"),
-  path.resolve(process.cwd(), "src/../.env"),
-  path.resolve(process.cwd(), "src/../.env.local"),
 ];
 
 for (const envPath of envFileCandidates) {
