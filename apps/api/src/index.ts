@@ -7,8 +7,8 @@ const envFileCandidates = [
   path.resolve(process.cwd(), ".env.local"),
   path.resolve(process.cwd(), "apps/api/.env"),
   path.resolve(process.cwd(), "apps/api/.env.local"),
-  path.resolve(__dirname, "../.env"),
-  path.resolve(__dirname, "../.env.local"),
+  path.resolve(process.cwd(), "src/../.env"),
+  path.resolve(process.cwd(), "src/../.env.local"),
 ];
 
 for (const envPath of envFileCandidates) {
@@ -19,7 +19,7 @@ for (const envPath of envFileCandidates) {
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
-    "DATABASE_URL is not set. Add it to apps/api/.env or apps/api/.env.local."
+    "DATABASE_URL is not set. Add it in Render environment variables or a local .env file."
   );
 }
 
@@ -30,7 +30,7 @@ async function start() {
 
   try {
     await app.listen({
-      port: 4000,
+      port: Number(process.env.PORT) || 4000,
       host: "0.0.0.0",
     });
   } catch (error) {
