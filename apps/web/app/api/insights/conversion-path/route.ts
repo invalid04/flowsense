@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { buildConversionPath } from "@repo/engine";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
@@ -34,70 +35,54 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const path = [startState.name];
-    const visited = new Set<string>([startState.name]);
-
-    let currentStateId = startState.id;
-    let currentStateName = startState.name;
-    let endedReason:
-      | "reached_conversion_state"
-      | "no_outgoing_transitions"
-      | "loop_detected"
-      | "max_steps_reached" = "max_steps_reached";
-
-    for (let step = 0; step < MAX_STEPS; step++) {
-      if (step > 0 && conversionStates.has(currentStateName)) {
-        endedReason = "reached_conversion_state";
-        break;
-      }
-
-      const outgoingRows = await db
-        .select({
-          toStateId: transitions.toStateId,
-          toStateName: states.name,
-          count: sql<number>`sum(${transitions.count})`,
-        })
-        .from(transitions)
-        .innerJoin(states, eq(transitions.toStateId, states.id))
-        .where(
-          and(
-            eq(transitions.fromStateId, currentStateId),
-            eq(transitions.accountId, account.id)
-          )
-        )
-        .groupBy(transitions.toStateId, states.name)
-        .orderBy(desc(sql<number>`sum(${transitions.count})`));
-
-      if (outgoingRows.length === 0) {
-        endedReason = "no_outgoing_transitions";
-        break;
-      }
-
-      const next = outgoingRows[0];
-      const nextStateName = next.toStateName;
-      const nextStateId = next.toStateId;
-
-      if (visited.has(nextStateName)) {
-        endedReason = "loop_detected";
-        break;
-      }
-
-      path.push(nextStateName);
-      visited.add(nextStateName);
-      currentStateId = nextStateId;
-      currentStateName = nextStateName;
-
-      if (conversionStates.has(currentStateName)) {
-        endedReason = "reached_conversion_state";
-        break;
-      }
+    const allStates = await db.select().from(states);
+    const stateNameById = new Map<string, string>();
+    for (const state of allStates) {
+      stateNameById.set(state.id, state.name);
     }
+
+    const allTransitions = await db
+      .select()
+      .from(transitions)
+      .where(eq(transitions.accountId, account.id));
+
+    const engineTransitions = allTransitions
+      .map((transition) => {
+        const fromStateName = stateNameById.get(transition.fromStateId);
+        const toStateName = stateNameById.get(transition.toStateId);
+
+        if (!fromStateName || !toStateName) {
+          return null;
+        }
+
+        return {
+          fromStateName,
+          toStateName,
+          count: Number(transition.count),
+        };
+      })
+      .filter(
+        (
+          transition
+        ): transition is {
+          fromStateName: string;
+          toStateName: string;
+          count: number;
+        } => transition !== null
+      );
+
+    const result = buildConversionPath({
+      startState: startState.name,
+      conversionStates,
+      transitions: engineTransitions,
+      maxSteps: MAX_STEPS,
+    });
 
     return NextResponse.json({
       startState: startState.name,
       conversionStates: Array.from(conversionStates),
-      path,
-      endedReason,
+      path: result.path,
+      endedReason: result.endedReason,
     });
   } catch (error) {
     if (error instanceof UnauthorizedError) {

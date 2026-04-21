@@ -58,3 +58,20 @@ export type DropoffDetectionResult = {
     biggestDropoff: DropoffCandidateResult | null;
     candidates: DropoffCandidateResult[];
 };
+
+export type ConversionPathEndedReason =
+  | "reached_conversion_state"
+  | "no_outgoing_transitions"
+  | "loop_detected"
+  | "max_steps_reached";
+
+export type ConversionPathEdgeInput = {
+  fromStateName: string;
+  toStateName: string;
+  count: number;
+};
+
+export type ConversionPathResult = {
+  path: string[];
+  endedReason: ConversionPathEndedReason;
+};
