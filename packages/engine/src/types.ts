@@ -38,17 +38,23 @@ export type RawTransitionInput = {
 export type LoopDetectionResult = {
     topLoop: LoopResult | null;
     loops: LoopResult[];
-}
-
-export type DropoffResult = {
-    state: string;
-    incoming: number;
-    outgoing: number;
-    dropoffRate: number;
 };
 
-export type ConversionPathResult = {
-    path: string[];
-    probability: number;
-    reachedConversion: boolean;
-}
+export type DropoffCandidateInput = {
+    stateId: string;
+    stateName: string;
+    incomingCount: number;
+    outgoingCount: number;
+};
+
+export type DropoffCandidateResult = {
+    stateId: string;
+    stateName: string;
+    incomingCount: number;
+    outgoingCount: number;
+};
+
+export type DropoffDetectionResult = {
+    biggestDropoff: DropoffCandidateResult | null;
+    candidates: DropoffCandidateResult[];
+};

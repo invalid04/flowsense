@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
+import { detectDropoffCandidates } from "@repo/engine";
 import { db } from "@/db";
 import { states, transitions } from "@/db/schema";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
@@ -34,22 +35,16 @@ export async function GET() {
       outgoingMap.set(row.stateId, Number(row.outgoingCount));
     }
 
-    const dropoffCandidates = incomingRows
-      .map((row) => ({
+    const result = detectDropoffCandidates(
+      incomingRows.map((row) => ({
         stateId: row.stateId,
         stateName: row.stateName,
         incomingCount: Number(row.incomingCount),
         outgoingCount: outgoingMap.get(row.stateId) ?? 0,
       }))
-      .filter((row) => row.outgoingCount === 0)
-      .sort((a, b) => b.incomingCount - a.incomingCount);
+    );
 
-    const biggestDropoff = dropoffCandidates[0] ?? null;
-
-    return NextResponse.json({
-      biggestDropoff,
-      candidates: dropoffCandidates,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return NextResponse.json(
