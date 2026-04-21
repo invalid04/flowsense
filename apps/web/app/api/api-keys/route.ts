@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { apiKeys } from "@/db/schema";
+import { db } from "@repo/db";
+import { apiKeys } from "@repo/db";
 import { getOrCreateAccount, UnauthorizedError } from "@/lib/getOrCreateAccount";
 
 function generateApiKey() {
@@ -73,3 +73,4 @@ export async function POST(req: NextRequest) {
         )
     }
 }
+

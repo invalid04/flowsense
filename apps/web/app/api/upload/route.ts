@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { parse } from "csv-parse/sync";
 import { eq, and } from "drizzle-orm";
-import { db } from "@/db";
-import { sessions, states, transitions as transitionsTable} from "@/db/schema";
+import { db } from "@repo/db";
+import { sessions, states, transitions as transitionsTable} from "@repo/db";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 type CsvRow = {
@@ -191,3 +191,4 @@ export async function POST(req: Request) {
         );
     }
 }
+

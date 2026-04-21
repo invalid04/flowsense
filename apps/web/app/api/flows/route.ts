@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { db } from "@/db";
-import { states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { states, transitions } from "@repo/db";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 type FlowStage = {

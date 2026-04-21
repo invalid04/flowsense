@@ -1,7 +1,7 @@
 import { parse } from "csv-parse/sync";
 import { and, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { sessions, states, transitions as transitionsTable } from "@/db/schema";
+import { db } from "@repo/db";
+import { sessions, states, transitions as transitionsTable } from "@repo/db";
 
 type CsvRow = {
   session_id: string;
@@ -145,3 +145,4 @@ export async function processCsvText(text: string, accountId: string): Promise<U
   const records = parseCsvText(text);
   return processCsvRecords(records, accountId);
 }
+

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import { db } from "@/db";
-import { accounts, sessions, states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { accounts, sessions, states, transitions } from "@repo/db";
 
 type TrackBody = {
   sessionKey: string;

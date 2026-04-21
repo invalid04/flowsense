@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { sessions, states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { sessions, states, transitions } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { getAccountByApiKey, extractApiKey } from "@/lib/getAccountByApiKey";
 

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { detectLoops } from "@repo/engine";
-import { db } from "@/db";
-import { states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { states, transitions } from "@repo/db";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 export async function GET() {

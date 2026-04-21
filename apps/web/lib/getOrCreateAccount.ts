@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { accounts } from "@/db/schema";
+import { db } from "@repo/db";
+import { accounts } from "@repo/db";
 
 export class UnauthorizedError extends Error {
   constructor(message = "Unauthorized") {
@@ -35,3 +35,4 @@ export async function getOrCreateAccount() {
 
   return account;
 }
+

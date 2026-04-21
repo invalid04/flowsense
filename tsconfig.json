@@ -14,7 +14,10 @@
 
     "baseUrl": ".",
     "paths": {
-      "@repo/*": ["packages/*"]
+      "@repo/*": ["packages/*"],
+      "drizzle-orm": ["node_modules/drizzle-orm"],
+      "drizzle-orm/*": ["node_modules/drizzle-orm/*"],
+      "@neondatabase/serverless": ["node_modules/@neondatabase/serverless"]
     }
   },
   "exclude": ["node_modules"]

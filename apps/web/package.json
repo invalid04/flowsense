@@ -9,6 +9,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
     "@clerk/nextjs": "^7.2.0",
     "@neondatabase/serverless": "^1.0.2",
     "csv-parse": "^6.2.1",

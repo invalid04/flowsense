@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import { db } from "@/db";
-import { sessions, states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { sessions, states, transitions } from "@repo/db";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 type TrackBody = {

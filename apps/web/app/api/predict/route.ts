@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { predictFromCandidates } from "@repo/engine";
-import { db } from "@/db";
-import { states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { states, transitions } from "@repo/db";
 import { UnauthorizedError, getOrCreateAccount } from "@/lib/getOrCreateAccount";
 
 export async function GET(req: NextRequest) {

@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { db } from "@/db";
-import { states, transitions } from "@/db/schema";
+import { db } from "@repo/db";
+import { states, transitions } from "@repo/db";
 
 const DEFAULT_CONVERSION_STATES = [
   "/confirmation",
@@ -86,3 +86,4 @@ export async function resolveConversionStatesForAccount({
 
   return Array.from(availableStates).sort((a, b) => a.localeCompare(b)).slice(0, 4);
 }
+

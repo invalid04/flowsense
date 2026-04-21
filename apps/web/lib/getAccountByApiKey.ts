@@ -1,5 +1,5 @@
-import { db }  from "@/db";
-import { accounts, apiKeys } from "@/db/schema";
+import { db }  from "@repo/db";
+import { accounts, apiKeys } from "@repo/db";
 import { and, eq, isNull } from "drizzle-orm";
 
 export async function getAccountByApiKey(apiKey: string) {
@@ -29,3 +29,4 @@ export function extractApiKey(req: Request) {
 
     return parts[1];
 }
+

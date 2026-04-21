@@ -7,12 +7,12 @@ import { LoopInsightCard } from "./LoopInsightCard";
 import { AutoSummaryCard } from "./AutoSummaryCard";
 import { TrackForm } from "./TrackForm";
 import { SampleDatasetLoader } from "./SampleDatasetLoader";
-import { db } from "@/db";
+import { db } from "@repo/db";
 import {
   sessions as sessionsTable,
   states as statesTable,
   transitions as transitionsTable,
-} from "@/db/schema";
+} from "@repo/db";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getOrCreateAccount } from "@/lib/getOrCreateAccount";
