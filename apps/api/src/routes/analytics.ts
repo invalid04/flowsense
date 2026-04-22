@@ -2,14 +2,12 @@ import { FastifyInstance } from "fastify";
 import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db, states, transitions } from "@repo/db";
-import { getAccountIdFromApiKey } from "../lib/getAccountIdFromApiKey";
+import { resolveAccountIdForRequest } from "../lib/resolveAccountIdForRequest";
 
 export default async function analyticsRoute(app: FastifyInstance) {
   app.get("/", async (request, reply) => {
     try {
-      const accountId = await getAccountIdFromApiKey(
-        request.headers.authorization
-      );
+      const accountId = await resolveAccountIdForRequest(request);
 
       if (!accountId) {
         return reply.status(401).send({

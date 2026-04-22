@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { predictFromCandidates } from "@repo/engine";
 import { db, states, transitions } from "@repo/db";
-import { getAccountIdFromApiKey } from "../lib/getAccountIdFromApiKey";
+import { resolveAccountIdForRequest } from "../lib/resolveAccountIdForRequest";
 
 export default async function predictRoute(app: FastifyInstance) {
   app.get("/", async (request, reply) => {
@@ -16,9 +16,7 @@ export default async function predictRoute(app: FastifyInstance) {
         });
       }
 
-      const accountId = await getAccountIdFromApiKey(
-        request.headers.authorization
-      );
+      const accountId = await resolveAccountIdForRequest(request);
 
       if (!accountId) {
         return reply.status(401).send({
