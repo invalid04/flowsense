@@ -75,3 +75,22 @@ export type ConversionPathResult = {
   path: string[];
   endedReason: ConversionPathEndedReason;
 };
+
+export type SequenceAction =
+    | {
+        type: "dropoff_warning";
+        state: string;
+        score: number;
+        message: string;
+    };
+
+export type TransitionSummary = {
+    fromState: string;
+    toState: string;
+    count: number;
+}
+
+export type EvaluateActionsInput = {
+    currentState: string;
+    transitions: TransitionSummary[];
+}
