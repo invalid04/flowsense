@@ -82,6 +82,12 @@ export type SequenceAction =
         state: string;
         score: number;
         message: string;
+    }
+    | {
+        type: "loop_warning";
+        states: string[];
+        score: number;
+        message: string;
     };
 
 export type TransitionSummary = {

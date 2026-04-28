@@ -4,47 +4,77 @@ export function evaluateActions({
     currentState,
     transitions,
 }: EvaluateActionsInput): SequenceAction[] {
-    const outgoingTransitions = transitions.filter(
-        (transition) => transition.fromState === currentState
+    const actions: SequenceAction[] = [];
+
+    const outgoing = transitions.filter(
+        (t) => t.fromState === currentState
     );
 
-    if (outgoingTransitions.length === 0) {
-        return [];
+    if (outgoing.length > 0) {
+        const total = outgoing.reduce((sum, t) => sum + t.count, 0); 
+
+        const exit = outgoing.find((t) => {
+            const to = t.toState.toLowerCase();
+            return (
+                to === "exit" ||
+                to === "dropoff" ||
+                to === "leave" ||
+                to === "__exit__"
+            );
+        });
+
+        const exitProb = (exit?.count ?? 0) / total;
+
+        if (exitProb >= 0.4) {
+            actions.push({
+                type: "dropoff_warning",
+                state: currentState,
+                score: Number(exitProb.toFixed(2)),
+                message: `Users often leave from ${currentState}`,
+            });
+        }
     }
 
-    const totalOutgoingCount = outgoingTransitions.reduce(
-        (sum, transition) => sum + transition.count,
-        0
-    );
+    const loopCandidates: {
+        a: string;
+        b: string;
+        score: number;
+    }[] = [];
 
-    if (totalOutgoingCount === 0) {
-        return [];
+    for (const t1 of transitions) {
+        for (const t2 of transitions) {
+            if (
+                t1.fromState === t2.toState &&
+                t1.toState === t2.fromState &&
+                t1.fromState !== t1.toState
+            ) {
+                const total = t1.count + t2.count;
+
+                if (total >= 5) {
+                    const balance = Math.min(t1.count, t2.count) / Math.max(t1.count, t2.count);
+
+                    loopCandidates.push({
+                        a: t1.fromState,
+                        b: t1.toState,
+                        score: balance,
+                    });
+                }
+            }
+        }
     }
 
-    const exitTransition = outgoingTransitions.find((transition) => {
-        const toState = transition.toState.toLowerCase();
+    if (loopCandidates.length > 0) {
+        const best = loopCandidates.sort((a, b) => b.score - a.score)[0];
 
-        return (
-            toState === "exit" ||
-            toState === "dropoff" ||
-            toState === "leave" ||
-            toState === "__exit__"
-        );
-    });
-
-    const exitCount = exitTransition?.count ?? 0;
-    const exitProbability = exitCount / totalOutgoingCount;
-
-    if (exitProbability < 0.4) {
-        return [];
+        if (best.score >= 0.5) {
+            actions.push({
+                type: "loop_warning",
+                states: [best.a, best.b],
+                score: Number(best.score.toFixed(2)),
+                message: `Users often bounce between ${best.a} and ${best.b} without progressing`,
+            });
+        }
     }
 
-    return [
-        {
-            type: "dropoff_warning",
-            state: currentState,
-            score: Number(exitProbability.toFixed(2)),
-            message: `Users often leave from ${currentState}. Consider showing help, reassurance, or a strong CTA here.`,
-        },
-    ];
+    return actions;
 }
