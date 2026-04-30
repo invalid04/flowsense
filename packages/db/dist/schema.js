@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.apiKeys = exports.transitions = exports.states = exports.sessions = exports.accounts = void 0;
+exports.sessionEvents = exports.apiKeys = exports.transitions = exports.states = exports.sessions = exports.accounts = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 exports.accounts = (0, pg_core_1.pgTable)("accounts", {
     id: (0, pg_core_1.uuid)("id").defaultRandom().primaryKey(),
@@ -52,4 +52,11 @@ exports.apiKeys = (0, pg_core_1.pgTable)("api_keys", {
     label: (0, pg_core_1.text)("label").notNull().default("Default Key"),
     revokedAt: (0, pg_core_1.timestamp)("revoked_at"),
     createdAt: (0, pg_core_1.timestamp)("created_at").defaultNow().notNull(),
+});
+exports.sessionEvents = (0, pg_core_1.pgTable)("session_events", {
+    id: (0, pg_core_1.uuid)("id").defaultRandom().primaryKey(),
+    accountId: (0, pg_core_1.uuid)("account_id").notNull().references(() => exports.accounts.id, { onDelete: "cascade" }),
+    sessionId: (0, pg_core_1.uuid)("session_id").notNull().references(() => exports.sessions.id, { onDelete: "cascade" }),
+    stateId: (0, pg_core_1.uuid)("state_id").notNull().references(() => exports.states.id, { onDelete: "cascade" }),
+    occurredAt: (0, pg_core_1.timestamp)("occurred_at").notNull().defaultNow(),
 });

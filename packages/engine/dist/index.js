@@ -19,3 +19,4 @@ __exportStar(require("./predict"), exports);
 __exportStar(require("./loops"), exports);
 __exportStar(require("./dropoff"), exports);
 __exportStar(require("./conversion-path"), exports);
+__exportStar(require("./actions"), exports);

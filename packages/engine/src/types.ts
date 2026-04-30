@@ -99,4 +99,8 @@ export type TransitionSummary = {
 export type EvaluateActionsInput = {
     currentState: string;
     transitions: TransitionSummary[];
-}
+    sessionPath?: {
+        state: string;
+        occurredAt: Date;
+    }[];
+};

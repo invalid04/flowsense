@@ -43,6 +43,13 @@
       "when": 1776320534822,
       "tag": "0005_volatile_eternals",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777578620856,
+      "tag": "0006_free_shockwave",
+      "breakpoints": true
     }
   ]
 }

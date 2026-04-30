@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { and, eq } from "drizzle-orm";
-import { db, sessions, states, transitions } from "@repo/db";
+import { and, desc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+import { db, sessions, states, transitions, sessionEvents } from "@repo/db";
+import { evaluateActions } from "@repo/engine";
 import { getAccountIdFromApiKey } from "../lib/getAccountIdFromApiKey";
 
 type TrackBody = {
@@ -83,12 +85,46 @@ async function getOrCreateState(stateName: string) {
 
   if (state) return state;
 
-  const inserted = await db
+  const [inserted] = await db
     .insert(states)
     .values({ name: stateName })
     .returning();
 
-  return inserted[0];
+  return inserted;
+}
+
+async function getRecentSessionPath(sessionId: string) {
+  const recentEvents = await db
+    .select({
+      state: states.name,
+      occurredAt: sessionEvents.occurredAt,
+    })
+    .from(sessionEvents)
+    .innerJoin(states, eq(sessionEvents.stateId, states.id))
+    .where(eq(sessionEvents.sessionId, sessionId))
+    .orderBy(desc(sessionEvents.occurredAt))
+    .limit(6);
+
+  return recentEvents.reverse().map((event) => ({
+    state: event.state,
+    occurredAt: event.occurredAt,
+  }));
+}
+
+async function getTransitionRows(accountId: string) {
+  const fromStates = alias(states, "from_states");
+  const toStates = alias(states, "to_states");
+
+  return db
+    .select({
+      fromState: fromStates.name,
+      toState: toStates.name,
+      count: transitions.count,
+    })
+    .from(transitions)
+    .innerJoin(fromStates, eq(transitions.fromStateId, fromStates.id))
+    .innerJoin(toStates, eq(transitions.toStateId, toStates.id))
+    .where(eq(transitions.accountId, accountId));
 }
 
 export default async function trackRoute(app: FastifyInstance) {
@@ -117,6 +153,12 @@ export default async function trackRoute(app: FastifyInstance) {
       const from = await getOrCreateState(fromState);
       const to = await getOrCreateState(toState);
 
+      await db.insert(sessionEvents).values({
+        accountId,
+        sessionId: session.id,
+        stateId: to.id,
+      });
+
       const existingTransition = await db.query.transitions.findFirst({
         where: and(
           eq(transitions.sessionId, session.id),
@@ -127,19 +169,29 @@ export default async function trackRoute(app: FastifyInstance) {
       });
 
       if (existingTransition) {
-        const updated = await db
+        const [updatedTransition] = await db
           .update(transitions)
           .set({ count: existingTransition.count + 1 })
           .where(eq(transitions.id, existingTransition.id))
           .returning();
 
+        const sessionPath = await getRecentSessionPath(session.id);
+        const transitionRows = await getTransitionRows(accountId);
+
+        const actions = evaluateActions({
+          currentState: toState,
+          transitions: transitionRows,
+          sessionPath,
+        });
+
         return reply.send({
           message: "Transition updated",
-          transition: updated[0],
+          transition: updatedTransition,
+          actions,
         });
       }
 
-      const insertedTransition = await db
+      const [insertedTransition] = await db
         .insert(transitions)
         .values({
           accountId,
@@ -150,9 +202,19 @@ export default async function trackRoute(app: FastifyInstance) {
         })
         .returning();
 
+      const sessionPath = await getRecentSessionPath(session.id);
+      const transitionRows = await getTransitionRows(accountId);
+
+      const actions = evaluateActions({
+        currentState: toState,
+        transitions: transitionRows,
+        sessionPath,
+      });
+
       return reply.send({
         message: "Transition recorded",
-        transition: insertedTransition[0],
+        transition: insertedTransition,
+        actions,
       });
     } catch (error) {
       request.log.error({ error }, "TRACK_ROUTE_ERROR");

@@ -59,3 +59,14 @@ export const apiKeys = pgTable("api_keys", {
     revokedAt: timestamp("revoked_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   });
+
+export const sessionEvents = pgTable("session_events", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    accountId: uuid("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+    stateId: uuid("state_id").notNull().references(() => states.id, { onDelete: "cascade" }),
+    occurredAt: timestamp("occurred_at").notNull().defaultNow(),
+});
+
+export type SessionEvent = typeof sessionEvents.$inferSelect;
+export type NewSessionEvent = typeof sessionEvents.$inferInsert;
