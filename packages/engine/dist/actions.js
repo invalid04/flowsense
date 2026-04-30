@@ -21,7 +21,7 @@ function detectSessionLoop(sessionPath) {
             type: "coupon_offer",
             reason: "pricing_loop_detected",
             states: [prev, last],
-            message: "This user appears stuck between two steps. Consider showing a coupon, reasssurance, or help prompt."
+            message: "This user appears stuck between two steps. Consider showing a coupon, reassurance, or help prompt."
         }
     ];
 }
