@@ -84,6 +84,12 @@ export type SequenceAction =
         message: string;
     }
     | {
+        type: "coupon_offer";
+        reason: "pricing_loop_detected";
+        states: string[];
+        message: string;
+    }
+    | {
         type: "loop_warning";
         states: string[];
         score: number;

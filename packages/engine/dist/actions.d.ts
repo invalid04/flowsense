@@ -1,2 +1,2 @@
 import type { SequenceAction, EvaluateActionsInput } from "./types";
-export declare function evaluateActions({ currentState, transitions, }: EvaluateActionsInput): SequenceAction[];
+export declare function evaluateActions({ currentState, transitions, sessionPath, }: EvaluateActionsInput): SequenceAction[];

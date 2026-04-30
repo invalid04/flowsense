@@ -1,8 +1,35 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.evaluateActions = evaluateActions;
-function evaluateActions({ currentState, transitions, }) {
+function detectSessionLoop(sessionPath) {
+    const recentStates = sessionPath.slice(-5).map((step) => step.state);
+    if (recentStates.length < 4) {
+        return [];
+    }
+    const last = recentStates[recentStates.length - 1];
+    const prev = recentStates[recentStates.length - 2];
+    const third = recentStates[recentStates.length - 3];
+    const fourth = recentStates[recentStates.length - 4];
+    const isAlternateLoop = fourth === prev &&
+        third === last &&
+        last !== prev;
+    if (!isAlternateLoop) {
+        return [];
+    }
+    return [
+        {
+            type: "coupon_offer",
+            reason: "pricing_loop_detected",
+            states: [prev, last],
+            message: "This user appears stuck between two steps. Consider showing a coupon, reasssurance, or help prompt."
+        }
+    ];
+}
+function evaluateActions({ currentState, transitions, sessionPath, }) {
     const actions = [];
+    if (sessionPath) {
+        actions.push(...detectSessionLoop(sessionPath));
+    }
     const outgoing = transitions.filter((t) => t.fromState === currentState);
     if (outgoing.length > 0) {
         const total = outgoing.reduce((sum, t) => sum + t.count, 0);

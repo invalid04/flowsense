@@ -1,10 +1,47 @@
 import type { SequenceAction, TransitionSummary, EvaluateActionsInput } from "./types";
 
+
+function detectSessionLoop(sessionPath: { state: string }[]): SequenceAction[] {
+    const recentStates = sessionPath.slice(-5).map((step) => step.state);
+    
+    if (recentStates.length < 4) {
+        return [];
+    }
+
+    const last = recentStates[recentStates.length - 1];
+    const prev = recentStates[recentStates.length - 2];
+    const third = recentStates[recentStates.length - 3];
+    const fourth = recentStates[recentStates.length - 4];
+ 
+    const isAlternateLoop =
+        fourth === prev &&
+        third === last &&
+        last !== prev;
+
+    if (!isAlternateLoop) {
+        return [];
+    }
+
+    return [
+        {
+            type: "coupon_offer",
+            reason: "pricing_loop_detected",
+            states: [prev, last],
+            message: "This user appears stuck between two steps. Consider showing a coupon, reassurance, or help prompt."
+        }
+    ]
+}
+
 export function evaluateActions({
     currentState,
     transitions,
+    sessionPath,
 }: EvaluateActionsInput): SequenceAction[] {
     const actions: SequenceAction[] = [];
+
+    if (sessionPath) {
+        actions.push(...detectSessionLoop(sessionPath))
+    }
 
     const outgoing = transitions.filter(
         (t) => t.fromState === currentState
