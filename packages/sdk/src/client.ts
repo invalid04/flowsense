@@ -24,6 +24,7 @@ export async function trackTransition(input: TrackTransitionInput) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
     },
     body: JSON.stringify(payload),
   });
