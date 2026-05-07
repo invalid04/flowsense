@@ -16,7 +16,7 @@
             <span className="text-[13px] font-normal tracking-[0.5em]">SEQUENCE</span>
           </a>
           <div className="hidden items-center gap-11 text-[11px] tech-label text-[#bdbdbd] md:flex">
-            <a className="transition-colors hover:text-foreground" href="#">
+            <a className="transition-colors hover:text-foreground" href="/sandbox">
               Product
             </a>
             <a className="transition-colors hover:text-foreground" href="/docs">
@@ -33,7 +33,7 @@
             </a>
             <a
               className="button-group inline-flex h-11 items-center gap-2 rounded-[4px] border border-divider-strong px-5 text-[11px] tracking-[0.16em] text-foreground transition-colors hover:border-foreground/50"
-              href="#"
+              href="/sandbox"
             >
               Run prediction
               <span className="button-arrow text-[13px]">→</span>
@@ -69,7 +69,7 @@
               <div className="mt-9 flex flex-wrap items-center gap-5">
                 <a
                   className="button-group inline-flex h-12 items-center gap-2 rounded-[4px] border border-divider-strong bg-surface-soft px-5 text-[11px] tech-label text-foreground transition-colors hover:border-foreground/56"
-                  href="#"
+                  href="/sandbox"
                 >
                   Run prediction
                   <span className="button-arrow text-[13px]">→</span>
@@ -177,7 +177,7 @@
               Once you see the sequence, you don&apos;t go back.
             </p>
             <a
-              href="#"
+              href="/sandbox"
               className="button-group mx-auto mt-9 inline-flex h-11 items-center gap-3 rounded-[4px] border border-divider px-6 text-[11px] tech-label text-foreground transition-colors hover:border-foreground/48"
             >
               Run your first sequence

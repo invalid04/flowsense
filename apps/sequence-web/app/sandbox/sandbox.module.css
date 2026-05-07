@@ -1,0 +1,435 @@
+.sandboxShell {
+  min-height: 100vh;
+  background: var(--background);
+  padding-top: 16px;
+  padding-bottom: 20px;
+}
+
+.runtimeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.kicker {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.title {
+  margin-top: 6px;
+  font-size: clamp(30px, 3.4vw, 44px);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.subtitle {
+  margin-top: 9px;
+  max-width: 66ch;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.headerRight {
+  display: grid;
+  gap: 7px;
+  min-width: 560px;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.metricCard {
+  border: 1px solid var(--divider);
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.metricLabel {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.metricValue {
+  margin-top: 3px;
+  font-size: 18px;
+  color: var(--foreground);
+}
+
+.controls {
+  display: flex;
+  gap: 7px;
+}
+
+.controlButton,
+.controlButtonGhost,
+.modeButton,
+.modeButtonActive {
+  height: 34px;
+  border: 1px solid var(--divider-strong);
+  padding-inline: 12px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.controlButton {
+  background: var(--surface-soft);
+}
+
+.controlButtonGhost,
+.modeButton {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--divider);
+}
+
+.controlButton:hover,
+.controlButtonGhost:hover,
+.modeButton:hover {
+  border-color: var(--divider-strong);
+  color: var(--foreground);
+}
+
+.modeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.modeButtonActive {
+  background: var(--surface-soft);
+  border-color: var(--foreground);
+}
+
+.runtimeGrid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(380px, 2fr) minmax(220px, 1fr);
+  gap: 10px;
+}
+
+.panel,
+.topologyPanel {
+  border: 1px solid var(--divider);
+  background: #0d0d0d;
+}
+
+.panel {
+  padding: 10px;
+}
+
+.topologyPanel {
+  padding: 12px 12px 4px;
+}
+
+.panelLabel {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.terminal {
+  margin-top: 8px;
+  padding: 8px;
+  min-height: 272px;
+  border: 1px solid var(--divider-soft);
+  background: #0a0a0a;
+}
+
+.streamLine {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  animation: append 220ms ease forwards;
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.timestamp {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.cursor {
+  margin-top: 8px;
+  color: var(--foreground);
+  animation: blink 1s steps(1, end) infinite;
+}
+
+.metaSection {
+  margin-top: 9px;
+}
+
+.metaLabel {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.metaValue {
+  margin-top: 4px;
+  color: var(--foreground);
+}
+
+.graph {
+  width: 100%;
+  height: 70vh;
+  max-height: 650px;
+}
+
+.edgeBase {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.11);
+  stroke-width: 0.5;
+}
+
+.edgePrediction,
+.edgeLowConfidence,
+.edgePredictedHot,
+.edgeActive {
+  fill: none;
+  stroke-width: 0.75;
+}
+
+.edgePrediction {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.edgeLowConfidence {
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-dasharray: 1.4 2.2;
+}
+
+.edgePredictedHot {
+  stroke: rgba(255, 255, 255, 0.36);
+  stroke-dasharray: 1.6 2.2;
+  animation: flow 1.7s linear infinite;
+}
+
+.edgeActive {
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-dasharray: 2 3;
+  stroke-width: 1.1;
+  animation: flow 1.2s linear infinite;
+}
+
+.nodePulse {
+  animation: pulse 1.35s ease-in-out infinite;
+}
+
+.nodeCore {
+  fill: rgba(255, 255, 255, 0.58);
+}
+
+.nodeCoreHot {
+  fill: rgba(255, 255, 255, 0.96);
+}
+
+.nodeLabel {
+  fill: rgba(255, 255, 255, 0.72);
+  font-size: 2.35px;
+  text-anchor: middle;
+}
+
+.block {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--divider-soft);
+}
+
+.blockLabel {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.transitionState,
+.transitionAction,
+.transitionArrow,
+.row,
+.actionName,
+.muted,
+.reasoningLine {
+  margin-top: 6px;
+  color: var(--foreground);
+}
+
+.transitionArrow,
+.muted,
+.reasoningLine {
+  color: var(--text-secondary);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.predictionMeter {
+  flex: 1;
+  height: 8px;
+  border: 1px solid var(--divider);
+  background: #0b0b0b;
+}
+
+.predictionBar {
+  display: block;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.72);
+  transition: width 260ms ease;
+}
+
+.actionBlock {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: #111111;
+  padding: 10px;
+  animation: actionFlash 460ms ease;
+}
+
+.actionEmit {
+  border-color: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.18);
+  animation: actionFlash 580ms ease, emitPulse 640ms ease;
+}
+
+.actionName {
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
+}
+
+.confidencePulse {
+  display: inline-block;
+  animation: confidenceTick 620ms ease;
+}
+
+.nodeEmit {
+  animation: emitNodeFlash 620ms ease;
+}
+
+.edgeTooltipBg {
+  fill: rgba(8, 8, 8, 0.92);
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 0.25;
+}
+
+.edgeTooltipText {
+  fill: rgba(255, 255, 255, 0.85);
+  font-size: 2.1px;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+@keyframes append {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes actionFlash {
+  0% {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  60% {
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.16);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes emitPulse {
+  0% {
+    transform: scale(0.995);
+  }
+  70% {
+    transform: scale(1.008);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confidenceTick {
+  0% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes emitNodeFlash {
+  0% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 1280px) {
+  .runtimeHeader {
+    flex-direction: column;
+  }
+
+  .headerRight {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1120px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .runtimeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .graph {
+    height: 420px;
+  }
+}
