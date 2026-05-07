@@ -84,3 +84,102 @@ body {
 .button-group:focus-visible .button-arrow {
   transform: translateX(2px);
 }
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cursorBlink {
+  0%,
+  46% {
+    opacity: 1;
+  }
+  54%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes signalDots {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+
+@keyframes flowTrace {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes traceAppend {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.live-dot {
+  animation: livePulse 1.7s ease-in-out infinite;
+}
+
+.live-cursor {
+  animation: cursorBlink 1.1s steps(1, end) infinite;
+}
+
+.signal-dots::after {
+  content: " . . .";
+  animation: signalDots 1.8s ease-in-out infinite;
+}
+
+.trace-flow {
+  stroke-dasharray: 6 8;
+  animation: flowTrace 1.3s linear infinite;
+}
+
+.trace-line {
+  opacity: 0;
+  animation: traceAppend 300ms ease-out forwards;
+}
+
+.terminal-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.035) 0%,
+    rgba(255, 255, 255, 0.012) 48%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.scanline-overlay {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.33;
+}

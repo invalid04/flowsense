@@ -19,7 +19,7 @@
             <a className="transition-colors hover:text-foreground" href="#">
               Product
             </a>
-            <a className="transition-colors hover:text-foreground" href="#">
+            <a className="transition-colors hover:text-foreground" href="/docs">
               Docs
             </a>
             <a className="transition-colors hover:text-foreground" href="#">
@@ -200,7 +200,7 @@
             © 2024 Sequence Labs, Inc.
           </p>
           <nav className="flex flex-wrap items-center gap-7 md:justify-end">
-            <a className="transition-colors hover:text-foreground" href="#">
+            <a className="transition-colors hover:text-foreground" href="/docs">
               Docs
             </a>
             <a className="transition-colors hover:text-foreground" href="#">
